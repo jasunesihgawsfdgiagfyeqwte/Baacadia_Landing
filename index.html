@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BAACADIA - A healing adventure through sound. Guide mystical Cloudfens through acoustic shepherding in a Moebius-inspired alien world.">
+    <meta name="theme-color" content="#f5d5c8">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="BAACADIA - A Healing Adventure Through Sound">
+    <meta property="og:description" content="Guide mystical Cloudfens through acoustic shepherding in a Moebius-inspired alien world.">
+    <meta property="og:type" content="website">
+    
+    <title>BAACADIA - A Healing Adventure Through Sound</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" aria-label="Loading">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading Cloudfens...</p>
+    </div>
+
+    <!-- WebGL Background Canvas -->
+    <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+    
+    <!-- Model Credit -->
+    <div class="model-credit">Cloudfen Model: Hannah</div>
+
+    <!-- Content -->
+    <div class="content">
+        
+        <!-- ═══════════════════════════════════════════════════════════
+             HERO SECTION
+             ═══════════════════════════════════════════════════════════ -->
+        <section class="hero">
+            <h1 class="hero-title">BAACADIA</h1>
+            <p class="hero-tagline">A healing adventure through sound</p>
+            
+            <div class="hero-cta">
+                <a href="#demo" class="btn btn-primary">▶ PLAY DEMO</a>
+                <a href="#" class="btn btn-secondary">+ WISHLIST</a>
+            </div>
+
+            <div class="scroll-indicator" aria-hidden="true">
+                <span>Scroll</span>
+                <div class="scroll-arrow"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             PITCH SECTION
+             ═══════════════════════════════════════════════════════════ -->
+        <section class="section pitch">
+            <div class="pitch-content">
+                <h2 class="pitch-question reveal">"What if sound was a language?"</h2>
+                
+                <p class="pitch-text reveal">
+                    You are <strong>Scout</strong>, a robot awakening in an alien world.<br>
+                    Your only companions: mysterious sheep-like creatures called <strong>Cloudfens</strong>.<br>
+                    Your only tool: the ability to record and replay sounds.
+                </p>
+                
+                <p class="pitch-text reveal">
+                    Together, you'll learn to shepherd through acoustics,<br>
+                    heal a world scarred by ancient sonic warfare,<br>
+                    and discover that <em>listening is more powerful than commanding</em>.
+                </p>
+
+                <div class="features-row">
+                    <article class="feature reveal">
+                        <div class="feature-icon">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <circle cx="24" cy="24" r="8"/>
+                                <path d="M24 8v4M24 36v4M8 24h4M36 24h4"/>
+                                <path d="M12 12l3 3M33 33l3 3M12 36l3-3M33 15l3-3"/>
+                                <circle cx="24" cy="24" r="16" stroke-dasharray="4 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Acoustic Shepherding</h3>
+                        <p class="feature-desc">Guide creatures through sound</p>
+                    </article>
+                    
+                    <article class="feature reveal">
+                        <div class="feature-icon">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M24 8c-8 0-14 6-14 14s6 14 14 14 14-6 14-14"/>
+                                <circle cx="24" cy="22" r="6"/>
+                                <path d="M20 28c0 4 2 8 4 10 2-2 4-6 4-10"/>
+                                <path d="M18 16c-2-2-4-2-6 0M30 16c2-2 4-2 6 0"/>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Contemplative Pacing</h3>
+                        <p class="feature-desc">No combat, no timers</p>
+                    </article>
+                    
+                    <article class="feature reveal">
+                        <div class="feature-icon">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M8 40 L24 8 L40 40 Z"/>
+                                <path d="M14 32 L24 14 L34 32"/>
+                                <circle cx="24" cy="26" r="3"/>
+                                <path d="M16 36h16"/>
+                            </svg>
+                        </div>
+                        <h3 class="feature-title">Moebius-Inspired</h3>
+                        <p class="feature-desc">Ligne claire in 3D</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             DEMO SECTION
+             ═══════════════════════════════════════════════════════════ -->
+        <section class="section demo-section" id="demo">
+            <div class="demo-container">
+                <h3 class="demo-title reveal">TRY IT YOURSELF</h3>
+                <div class="demo-frame reveal ligne-claire-border">
+                    <p class="demo-placeholder">[Embedded 30s Mini Demo]</p>
+                </div>
+                <p class="demo-hint reveal">Hold SPACE to guide the Cloudfen</p>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CTA SECTION
+             ═══════════════════════════════════════════════════════════ -->
+        <section class="section cta-section">
+            <div class="cta-content">
+                <h2 class="cta-title reveal">READY TO LISTEN?</h2>
+                
+                <div class="cta-buttons reveal">
+                    <a href="#" class="btn btn-steam">+ WISHLIST ON STEAM</a>
+                    <a href="#" class="btn btn-discord">JOIN OUR DISCORD</a>
+                </div>
+
+                <p class="archives-link reveal">
+                    Or explore <a href="/archives">Scout's Archives →</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             FOOTER
+             ═══════════════════════════════════════════════════════════ -->
+        <footer>
+            USC Games · Advanced Games Project 2025-2026
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

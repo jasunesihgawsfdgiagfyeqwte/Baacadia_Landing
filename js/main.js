@@ -20,10 +20,11 @@
         jumpHeight: { min: 0.15, max: 0.25 },
         initialPosition: { 
             desktop: { x: 0, y: 1, z: 12 },
-            mobile: { x: 0, y: 0.5, z: 14 }  
+            mobile: { x: 0, y: 0.5, z: 14 }  // 移动端相机拉远一点，降低一点
         },
         scrollInfluence: { y: 4, z: 5 },
         modelScale: 1.0,
+        // 移动端相机FOV更宽以看到更多内容
         fov: { desktop: 60, mobile: 75 }
     };
 
@@ -48,21 +49,23 @@
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
         || window.innerWidth < 768;
 
-
+    // ─────────────────────────────────────────────────────────────────
+    // RESPONSIVE POSITIONS - 根据屏幕尺寸调整羊的位置
+    // ─────────────────────────────────────────────────────────────────
     function getCloudfenPositions() {
-        // compact layout for the mobile
+        // 移动端：更小、更分散的布局
         if (isMobile) {
             return [
-                { x: -2.0, y: -0.5, scale: 1.2 },   // left
-                { x: 2.0, y: -0.3, scale: 1.15 },   // right
-                { x: -0.8, y: -1.2, scale: 1.35 },  // middle left
-                { x: 1.2, y: -1.0, scale: 1.3 },    // middle right
-                { x: 0, y: 0.3, scale: 0.9 },       // right far top
-                { x: -1.5, y: 0.6, scale: 0.85 },   // left far top
+                { x: -3.2, y: -0.8, scale: 0.75 },   // 左下
+                { x: 3.0, y: -0.5, scale: 0.7 },    // 右下
+                { x: -1.2, y: -1.8, scale: 0.85 },  // 中左（最近）
+                { x: 1.8, y: -1.5, scale: 0.8 },    // 中右
+                { x: -2.5, y: 0.8, scale: 0.55 },   // 左上（远处）
+                { x: 2.8, y: 1.0, scale: 0.5 },     // 右上（远处）
             ];
         }
         
-        // original layout for tablet
+        // 桌面端使用原始布局
         return [
             { x: -5.5, y: -0.3, scale: 1.1 },
             { x: 5.5, y: -0.5, scale: 1.15 },
@@ -102,11 +105,11 @@
         scene.background = new THREE.Color(COLORS.skyPeach);
         scene.fog = new THREE.Fog(COLORS.skyPeach, 15, 60);
 
-        // FOV deside by mobile or tablet
+        // 根据设备选择FOV
         const fov = isMobile ? CONFIG.fov.mobile : CONFIG.fov.desktop;
         camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
         
-        // chose camPos
+        // 根据设备选择相机位置
         const camPos = isMobile ? CONFIG.initialPosition.mobile : CONFIG.initialPosition.desktop;
         camera.position.set(camPos.x, camPos.y, camPos.z);
 

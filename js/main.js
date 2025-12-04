@@ -18,9 +18,13 @@
         bobSpeed: { min: 0.8, max: 1.2 },
         rotateSpeed: { min: 0.05, max: 0.12 },
         jumpHeight: { min: 0.15, max: 0.25 },
-        initialPosition: { x: 0, y: 1, z: 12 },
+        initialPosition: { 
+            desktop: { x: 0, y: 1, z: 12 },
+            mobile: { x: 0, y: 0.5, z: 14 }  
+        },
         scrollInfluence: { y: 4, z: 5 },
-        modelScale: 1.0
+        modelScale: 1.0,
+        fov: { desktop: 60, mobile: 75 }
     };
 
     // Colors (Baacadia Art Bible - NO greens, alien desert)
@@ -43,6 +47,31 @@
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
         || window.innerWidth < 768;
+
+
+    function getCloudfenPositions() {
+        // compact layout for the mobile
+        if (isMobile) {
+            return [
+                { x: -2.0, y: -0.5, scale: 1.2 },   // left
+                { x: 2.0, y: -0.3, scale: 1.15 },   // right
+                { x: -0.8, y: -1.2, scale: 1.35 },  // middle left
+                { x: 1.2, y: -1.0, scale: 1.3 },    // middle right
+                { x: 0, y: 0.3, scale: 0.9 },       // right far top
+                { x: -1.5, y: 0.6, scale: 0.85 },   // left far top
+            ];
+        }
+        
+        // original layout for tablet
+        return [
+            { x: -5.5, y: -0.3, scale: 1.1 },
+            { x: 5.5, y: -0.5, scale: 1.15 },
+            { x: -2.5, y: -1.5, scale: 1.3 },
+            { x: 3.0, y: -1.3, scale: 1.25 },
+            { x: -3.5, y: 0.8, scale: 0.85 },
+            { x: 4.0, y: 0.6, scale: 0.8 },
+        ];
+    }
 
     // ─────────────────────────────────────────────────────────────────
     // GRADIENT TEXTURE FOR TOON SHADING
@@ -73,8 +102,13 @@
         scene.background = new THREE.Color(COLORS.skyPeach);
         scene.fog = new THREE.Fog(COLORS.skyPeach, 15, 60);
 
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(CONFIG.initialPosition.x, CONFIG.initialPosition.y, CONFIG.initialPosition.z);
+        // FOV deside by mobile or tablet
+        const fov = isMobile ? CONFIG.fov.mobile : CONFIG.fov.desktop;
+        camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // chose camPos
+        const camPos = isMobile ? CONFIG.initialPosition.mobile : CONFIG.initialPosition.desktop;
+        camera.position.set(camPos.x, camPos.y, camPos.z);
 
         renderer = new THREE.WebGLRenderer({ 
             canvas, 
@@ -186,15 +220,7 @@
         applyMaterials(loadedModel);
         
         const count = isMobile ? CONFIG.cloudfenCount.mobile : CONFIG.cloudfenCount.desktop;
-        
-        const positions = [
-            { x: -5.5, y: -0.3, scale: 1.1 },
-            { x: 5.5, y: -0.5, scale: 1.15 },
-            { x: -2.5, y: -1.5, scale: 1.3 },
-            { x: 3.0, y: -1.3, scale: 1.25 },
-            { x: -3.5, y: 0.8, scale: 0.85 },
-            { x: 4.0, y: 0.6, scale: 0.8 },
-        ];
+        const positions = getCloudfenPositions();
         
         // Shuffle positions
         for (let i = positions.length - 1; i > 0; i--) {
@@ -208,10 +234,10 @@
             const cf = loadedModel.clone();
             const pos = positions[i];
             
-            const x = pos.x + (Math.random() - 0.5) * 0.5;
-            const y = pos.y + (Math.random() - 0.5) * 0.3;
+            const x = pos.x + (Math.random() - 0.5) * 0.3;
+            const y = pos.y + (Math.random() - 0.5) * 0.2;
             const z = -y * 1.5 + 3;
-            const scale = pos.scale + (Math.random() - 0.5) * 0.15;
+            const scale = pos.scale + (Math.random() - 0.5) * 0.1;
             const rotY = (Math.random() - 0.5) * Math.PI;
             
             cf.position.set(x, y, z);
@@ -248,20 +274,13 @@
     // PROCEDURAL CLOUDFEN FALLBACK
     // ─────────────────────────────────────────────────────────────────
     function createProceduralCloudfens() {
-        const count = isMobile ? 3 : 6;
+        const count = isMobile ? 4 : 6;
         const gradientMap = createGradientTexture();
         const woolMat = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap });
         const darkMat = new THREE.MeshToonMaterial({ color: 0x1a1a1a, gradientMap });
         const outlineMat = new THREE.MeshBasicMaterial({ color: COLORS.ink, side: THREE.BackSide });
         
-        const positions = [
-            { x: -5.5, y: -0.3, scale: 1.1 },
-            { x: 5.5, y: -0.5, scale: 1.15 },
-            { x: -2.5, y: -1.5, scale: 1.3 },
-            { x: 3.0, y: -1.3, scale: 1.25 },
-            { x: -3.5, y: 0.8, scale: 0.85 },
-            { x: 4.0, y: 0.6, scale: 0.8 },
-        ];
+        const positions = getCloudfenPositions();
         
         for (let i = positions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -317,10 +336,10 @@
                 group.add(leg);
             });
 
-            const x = pos.x + (Math.random() - 0.5) * 0.5;
-            const y = pos.y + (Math.random() - 0.5) * 0.3;
+            const x = pos.x + (Math.random() - 0.5) * 0.3;
+            const y = pos.y + (Math.random() - 0.5) * 0.2;
             const z = -y * 1.5 + 3;
-            const scale = pos.scale + (Math.random() - 0.5) * 0.15;
+            const scale = pos.scale + (Math.random() - 0.5) * 0.1;
             const rotY = (Math.random() - 0.5) * Math.PI;
 
             group.position.set(x, y, z);
@@ -457,8 +476,10 @@
             }
         }
 
-        camera.position.y = CONFIG.initialPosition.y - scrollY * CONFIG.scrollInfluence.y;
-        camera.position.z = CONFIG.initialPosition.z - scrollY * CONFIG.scrollInfluence.z;
+        // 使用设备对应的初始位置
+        const initPos = isMobile ? CONFIG.initialPosition.mobile : CONFIG.initialPosition.desktop;
+        camera.position.y = initPos.y - scrollY * CONFIG.scrollInfluence.y;
+        camera.position.z = initPos.z - scrollY * CONFIG.scrollInfluence.z;
         camera.lookAt(0, scrollY * -2, -5);
 
         renderer.render(scene, camera);

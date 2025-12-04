@@ -280,7 +280,20 @@ body {
     border: 2px solid var(--ink);
     transition: all 0.4s var(--ease-out-expo);
     cursor: pointer;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Play icon in button */
+.play-icon {
+    flex-shrink: 0;
+    transition: transform 0.3s var(--ease-out-expo);
+}
+
+.btn:hover .play-icon {
+    transform: scale(1.1);
 }
 
 .btn-primary {
@@ -608,6 +621,28 @@ footer {
         font-size: 0.65rem;
         padding: 0.4rem 0.8rem;
     }
+    
+    /* 移动端hero区域调整，给羊留出更多空间 */
+    .hero {
+        justify-content: flex-start;
+        padding-top: 15vh;
+    }
+    
+    .hero-title {
+        font-size: clamp(3.5rem, 12vw, 6rem);
+    }
+    
+    .hero-tagline {
+        font-size: clamp(1rem, 2.5vw, 1.3rem);
+    }
+    
+    .hero-cta {
+        margin-top: 2rem;
+    }
+    
+    .scroll-indicator {
+        bottom: 2rem;
+    }
 }
 
 /* Mobile */
@@ -620,6 +655,20 @@ footer {
     .pitch-text {
         font-size: 1.1rem;
         line-height: 1.8;
+    }
+    
+    /* 更小屏幕的进一步调整 */
+    .hero {
+        padding-top: 12vh;
+    }
+    
+    .hero-title {
+        font-size: clamp(3rem, 14vw, 5rem);
+    }
+    
+    .btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
     }
 }
 

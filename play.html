@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAACADIA - Sound Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Sky / Background */
+            --sky-peach: #f5d5c8;
+            --sky-tan: #e8c8b0;
+            
+            /* Ground */
+            --sand: #d4a574;
+            --sand-light: #e8d4b8;
+            --sand-dark: #c89860;
+            
+            /* Flora (alive) */
+            --teal: #4ECDC4;
+            --teal-bright: #7EFFD0;
+            --coral: #c87878;
+            --pink: #e8a8b8;
+            
+            /* Flora (sleeping) */
+            --gray-muted: #888888;
+            --gray-light: #9a9a9a;
+            
+            /* Ink */
+            --ink: #2a2420;
+            --ink-soft: #4a4038;
+            
+            /* Characters */
+            --scout-body: #6a8a9a;
+            --cloudfen-white: #f8f8f5;
+            --cloudfen-dark: #1a1a1a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--sky-peach);
+            font-family: 'Crimson Pro', serif;
+            cursor: none;
+            user-select: none;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Custom Cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--ink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.06s ease, background 0.06s ease, border-color 0.1s ease;
+            background: rgba(245, 213, 200, 0.3);
+        }
+
+        .custom-cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: var(--ink);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .custom-cursor.gathering {
+            transform: translate(-50%, -50%) scale(1.3);
+            background: rgba(78, 205, 196, 0.4);
+            border-color: var(--teal);
+        }
+
+        .custom-cursor.charging {
+            transform: translate(-50%, -50%) scale(0.7);
+            background: rgba(232, 168, 184, 0.5);
+            border-color: var(--pink);
+        }
+
+        .custom-cursor.near-bird {
+            border-color: var(--coral);
+            animation: cursorPulse 1s ease infinite;
+        }
+
+        @keyframes cursorPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(200, 120, 120, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(200, 120, 120, 0); }
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--sky-peach);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-title {
+            font-family: 'Caveat', cursive;
+            font-size: 2.8rem;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.15em;
+        }
+
+        .loading-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1rem;
+            color: var(--ink-soft);
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 2px;
+            background: var(--sand-light);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: var(--ink);
+            width: 0%;
+            transition: width 0.15s ease;
+        }
+
+        /* Control Panel (Left) */
+        .control-panel {
+            position: fixed;
+            left: 1.5rem;
+            bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            z-index: 100;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+        }
+
+        .control-panel.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 1rem;
+            background: rgba(42, 36, 32, 0.88);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-width: 140px;
+            backdrop-filter: blur(6px);
+        }
+
+        .control-btn:hover:not(.locked) {
+            background: rgba(42, 36, 32, 0.95);
+            transform: translateX(4px);
+        }
+
+        .control-btn.active {
+            border-color: var(--teal);
+            box-shadow: 0 0 16px rgba(78, 205, 196, 0.5);
+        }
+
+        .control-btn.locked {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .control-btn.unlocking {
+            animation: unlockPulse 0.6s ease;
+        }
+
+        @keyframes unlockPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); border-color: var(--teal-bright); box-shadow: 0 0 24px rgba(126, 255, 208, 0.6); }
+        }
+
+        .control-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .control-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .control-name {
+            font-family: 'Caveat', cursive;
+            font-size: 1.1rem;
+            color: var(--sky-peach);
+            line-height: 1.1;
+        }
+
+        .control-hint {
+            font-size: 0.7rem;
+            color: var(--sand);
+            font-style: italic;
+        }
+
+        /* Brand Corner (Right) */
+        .brand-corner {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            text-align: right;
+            z-index: 100;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+        }
+
+        .brand-corner.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .brand-title {
+            font-family: 'Caveat', cursive;
+            font-size: 1.4rem;
+            color: var(--ink);
+            letter-spacing: 0.14em;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-link {
+            font-size: 0.8rem;
+            color: var(--ink-soft);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .brand-link:hover {
+            color: var(--coral);
+        }
+
+        /* Contextual Prompts */
+        .prompt {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.6rem 1.2rem;
+            background: rgba(42, 36, 32, 0.8);
+            border-radius: 20px;
+            font-family: 'Crimson Pro', serif;
+            font-size: 0.9rem;
+            color: var(--sky-peach);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+            backdrop-filter: blur(6px);
+        }
+
+        .prompt.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .prompt-controls {
+            bottom: 5rem;
+        }
+
+        .prompt-record {
+            top: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .record-ring {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--teal);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 0%;
+            background: var(--teal-bright);
+            transition: height 0.05s linear;
+        }
+
+        .prompt-recorded {
+            top: 2rem;
+            background: rgba(78, 205, 196, 0.92);
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        /* Effect Overlays */
+        .bloom-flash {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(126, 255, 208, 0.3), transparent 60%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .bloom-flash.active {
+            animation: bloomFlash 0.8s ease-out;
+        }
+
+        @keyframes bloomFlash {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .control-panel {
+                left: 1rem;
+                bottom: 1rem;
+            }
+            .control-btn {
+                min-width: 110px;
+                padding: 0.5rem 0.8rem;
+            }
+            .brand-corner {
+                right: 1rem;
+                bottom: 1rem;
+            }
+            .brand-title {
+                font-size: 1.15rem;
+            }
+        }
+
+        @media (hover: none) {
+            .custom-cursor {
+                display: none;
+            }
+            body {
+                cursor: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-title">BAACADIA</div>
+        <div class="loading-text">Entering the Sound Garden...</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="cursor"></div>
+
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Bloom Flash Effect -->
+    <div class="bloom-flash" id="bloom-flash"></div>
+
+    <!-- Control Panel -->
+    <div class="control-panel" id="control-panel">
+        <div class="control-btn" id="btn-gather" data-sound="gather">
+            <div class="control-icon">◉</div>
+            <div class="control-info">
+                <div class="control-name">Gather</div>
+                <div class="control-hint">Hold Left Click</div>
+            </div>
+        </div>
+        <div class="control-btn locked" id="btn-charge" data-sound="charge">
+            <div class="control-icon">?</div>
+            <div class="control-info">
+                <div class="control-name">???</div>
+                <div class="control-hint">Find a sound</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brand Corner -->
+    <div class="brand-corner" id="brand-corner">
+        <div class="brand-title">BAACADIA</div>
+        <a class="brand-link" id="learn-more">↗ Learn More</a>
+    </div>
+
+    <!-- Contextual Prompts -->
+    <div class="prompt prompt-controls" id="prompt-controls">Move mouse to guide Scout · Left click to Gather</div>
+    <div class="prompt prompt-record" id="prompt-record">
+        <div class="record-ring">
+            <div class="record-fill" id="record-fill"></div>
+        </div>
+        <span>Hold Left Click to record</span>
+    </div>
+    <div class="prompt prompt-recorded" id="prompt-recorded">✓ Sound Recorded: Charge</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        // ═══════════════════════════════════════════════════════════════
+        // CONFIGURATION
+        // ═══════════════════════════════════════════════════════════════
+        const CONFIG = {
+            // World
+            worldSize: 70,
+            
+            // Camera
+            cameraHeight: 12,
+            cameraDistance: 8,
+            cameraLerp: 0.06,
+            
+            // Scout (mouse-follow)
+            scoutSpeed: 4,
+            scoutLerp: 0.1, // How smoothly Scout follows mouse
+            scoutRadius: 0.4,
+            
+            // Physics
+            physicsIterations: 3,
+            
+            // Cloudfens (5 sheep)
+            cloudfenCount: 5,
+            cloudfenRadius: 0.4,
+            cloudfenIdleRadius: 5,
+            cloudfenFollowSpeed: 6,
+            cloudfenChargeSpeed: 14,
+            cloudfenGatherRadius: 10,
+            cloudfenMass: 1.0,
+            cloudfenFriction: 0.92,
+            
+            // Bird
+            birdPatrolRadius: 3.5,
+            birdCallInterval: [5000, 9000],
+            birdRecordRange: 6,
+            recordDuration: 1800,
+            
+            // Moss Balls
+            mossBallRadius: 0.4,
+            mossBallMass: 0.6,
+            mossBallFriction: 0.95,
+            mossBallBounce: 0.3,
+            
+            // Trees
+            treeRadius: 1.0,
+            
+            // World elements
+            treeCount: 5,
+            flowerClusterCount: 6,
+            mossBallCount: 4,
+            waterPuddleCount: 2,
+            rockCount: 30,
+            grassPatchCount: 50
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // COLORS
+        // ═══════════════════════════════════════════════════════════════
+        const COLORS = {
+            skyPeach: 0xf5d5c8,
+            sand: 0xd4a574,
+            sandLight: 0xe8d4b8,
+            sandDark: 0xc89860,
+            teal: 0x4ECDC4,
+            tealBright: 0x7EFFD0,
+            coral: 0xc87878,
+            pink: 0xe8a8b8,
+            grayMuted: 0x888888,
+            grayLight: 0x9a9a9a,
+            ink: 0x2a2420,
+            scoutBody: 0x6a8a9a,
+            scoutDark: 0x5a7a8a,
+            cloudfenWhite: 0xf8f8f5,
+            cloudfenDark: 0x1a1a1a,
+            treeTrunk: 0x8b5a5a,
+            treeCanopy: 0xc87878
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+        let scene, camera, renderer, clock;
+        let scout, cloudfens = [], bird;
+        let trees = [], mossBalls = [], flowerClusters = [], waterPuddles = [], rocks = [];
+        
+        // Physics bodies
+        let physicsBodies = [];
+        
+        // Mouse / Input
+        let mouseWorld = new THREE.Vector3(0, 0, 0);
+        let mouseScreen = new THREE.Vector2(0, 0);
+        let isLeftMouseDown = false;
+        let isRightMouseDown = false;
+        
+        // Game state
+        let hasChargeAbility = false;
+        let isGathering = false;
+        let isRecording = false;
+        let recordStartTime = 0;
+        let birdIsCalling = false;
+        let hasShownPrompt = false;
+        let gameStarted = false;
+
+        // ═══════════════════════════════════════════════════════════════
+        // SIMPLE PHYSICS ENGINE
+        // ═══════════════════════════════════════════════════════════════
+        class PhysicsBody {
+            constructor(mesh, options = {}) {
+                this.mesh = mesh;
+                this.position = mesh.position;
+                this.velocity = new THREE.Vector3();
+                this.acceleration = new THREE.Vector3();
+                this.radius = options.radius || 0.5;
+                this.mass = options.mass || 1.0;
+                this.friction = options.friction || 0.95;
+                this.bounce = options.bounce || 0.5;
+                this.isStatic = options.isStatic || false;
+                this.type = options.type || 'dynamic';
+                this.onCollide = options.onCollide || null;
+            }
+
+            applyForce(force) {
+                const f = force.clone().divideScalar(this.mass);
+                this.acceleration.add(f);
+            }
+
+            update(delta) {
+                if (this.isStatic) return;
+
+                this.velocity.add(this.acceleration.clone().multiplyScalar(delta));
+                this.velocity.multiplyScalar(this.friction);
+                this.position.add(this.velocity.clone().multiplyScalar(delta));
+                this.acceleration.set(0, 0, 0);
+
+                // Keep on ground
+                this.position.y = Math.max(this.position.y, this.mesh.userData.groundY || 0.35);
+
+                // World bounds (soft)
+                const bound = CONFIG.worldSize / 2 - 2;
+                if (this.position.x > bound) { this.position.x = bound; this.velocity.x *= -0.3; }
+                if (this.position.x < -bound) { this.position.x = -bound; this.velocity.x *= -0.3; }
+                if (this.position.z > bound) { this.position.z = bound; this.velocity.z *= -0.3; }
+                if (this.position.z < -bound) { this.position.z = -bound; this.velocity.z *= -0.3; }
+            }
+        }
+
+        function resolveCollision(bodyA, bodyB) {
+            const delta = new THREE.Vector3().subVectors(bodyB.position, bodyA.position);
+            delta.y = 0;
+            const dist = delta.length();
+            const minDist = bodyA.radius + bodyB.radius;
+
+            if (dist < minDist && dist > 0.001) {
+                const normal = delta.normalize();
+                const overlap = minDist - dist;
+
+                // Separate bodies
+                if (!bodyA.isStatic && !bodyB.isStatic) {
+                    const totalMass = bodyA.mass + bodyB.mass;
+                    bodyA.position.sub(normal.clone().multiplyScalar(overlap * (bodyB.mass / totalMass)));
+                    bodyB.position.add(normal.clone().multiplyScalar(overlap * (bodyA.mass / totalMass)));
+                } else if (!bodyA.isStatic) {
+                    bodyA.position.sub(normal.clone().multiplyScalar(overlap));
+                } else if (!bodyB.isStatic) {
+                    bodyB.position.add(normal.clone().multiplyScalar(overlap));
+                }
+
+                // Calculate impulse
+                const relVel = new THREE.Vector3().subVectors(bodyA.velocity, bodyB.velocity);
+                const velAlongNormal = relVel.dot(normal);
+
+                if (velAlongNormal > 0) return;
+
+                const restitution = Math.min(bodyA.bounce, bodyB.bounce);
+                let j = -(1 + restitution) * velAlongNormal;
+                
+                if (!bodyA.isStatic && !bodyB.isStatic) {
+                    j /= (1 / bodyA.mass + 1 / bodyB.mass);
+                } else {
+                    j /= bodyA.isStatic ? (1 / bodyB.mass) : (1 / bodyA.mass);
+                }
+
+                const impulse = normal.clone().multiplyScalar(j);
+                
+                if (!bodyA.isStatic) {
+                    bodyA.velocity.sub(impulse.clone().divideScalar(bodyA.mass));
+                }
+                if (!bodyB.isStatic) {
+                    bodyB.velocity.add(impulse.clone().divideScalar(bodyB.mass));
+                }
+
+                // Collision callbacks
+                if (bodyA.onCollide) bodyA.onCollide(bodyB);
+                if (bodyB.onCollide) bodyB.onCollide(bodyA);
+
+                return true;
+            }
+            return false;
+        }
+
+        function updatePhysics(delta) {
+            // Update all bodies
+            for (const body of physicsBodies) {
+                body.update(delta);
+            }
+
+            // Collision detection
+            for (let iter = 0; iter < CONFIG.physicsIterations; iter++) {
+                for (let i = 0; i < physicsBodies.length; i++) {
+                    for (let j = i + 1; j < physicsBodies.length; j++) {
+                        const bodyA = physicsBodies[i];
+                        const bodyB = physicsBodies[j];
+                        
+                        // Skip static-static collisions
+                        if (bodyA.isStatic && bodyB.isStatic) continue;
+                        
+                        resolveCollision(bodyA, bodyB);
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════
+        function init() {
+            setupThreeJS();
+            createWorld();
+            setupInput();
+            simulateLoading();
+        }
+
+        function setupThreeJS() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(COLORS.skyPeach);
+            scene.fog = new THREE.Fog(COLORS.skyPeach, 25, 55);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 120);
+            camera.position.set(0, CONFIG.cameraHeight, CONFIG.cameraDistance);
+            camera.lookAt(0, 0, 0);
+
+            const canvas = document.getElementById('game-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            clock = new THREE.Clock();
+
+            window.addEventListener('resize', onResize);
+        }
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function simulateLoading() {
+            const progress = document.getElementById('loading-progress');
+            let p = 0;
+            const interval = setInterval(() => {
+                p += Math.random() * 15 + 5;
+                if (p >= 100) {
+                    p = 100;
+                    clearInterval(interval);
+                    setTimeout(startGame, 350);
+                }
+                progress.style.width = p + '%';
+            }, 70);
+        }
+
+        function startGame() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('control-panel').classList.add('visible');
+            document.getElementById('brand-corner').classList.add('visible');
+            
+            gameStarted = true;
+
+            // Show controls prompt
+            setTimeout(() => {
+                if (!hasShownPrompt) {
+                    hasShownPrompt = true;
+                    document.getElementById('prompt-controls').classList.add('visible');
+                    setTimeout(() => {
+                        document.getElementById('prompt-controls').classList.remove('visible');
+                    }, 4000);
+                }
+            }, 1000);
+            
+            animate();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WORLD CREATION
+        // ═══════════════════════════════════════════════════════════════
+        function createWorld() {
+            createLighting();
+            createGround();
+            createScout();
+            createCloudfens();
+            createBird();
+            createTrees();
+            createFlowerClusters();
+            createWaterPuddles();
+            createMossBalls();
+            createDecorations();
+        }
+
+        function createLighting() {
+            scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+            
+            const sun = new THREE.DirectionalLight(0xfff5e8, 0.85);
+            sun.position.set(10, 18, 10);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 1024;
+            sun.shadow.mapSize.height = 1024;
+            sun.shadow.camera.near = 1;
+            sun.shadow.camera.far = 50;
+            sun.shadow.camera.left = -25;
+            sun.shadow.camera.right = 25;
+            sun.shadow.camera.top = 25;
+            sun.shadow.camera.bottom = -25;
+            scene.add(sun);
+
+            const fill = new THREE.DirectionalLight(0xffe4d6, 0.3);
+            fill.position.set(-6, 10, -4);
+            scene.add(fill);
+        }
+
+        function createGround() {
+            const geo = new THREE.PlaneGeometry(CONFIG.worldSize, CONFIG.worldSize, 80, 80);
+            geo.rotateX(-Math.PI / 2);
+            
+            const pos = geo.attributes.position.array;
+            for (let i = 0; i < pos.length; i += 3) {
+                pos[i + 1] = Math.sin(pos[i] * 0.06) * Math.cos(pos[i + 2] * 0.06) * 0.2;
+            }
+            geo.computeVertexNormals();
+
+            const mat = new THREE.MeshStandardMaterial({
+                color: COLORS.sand,
+                roughness: 0.88,
+                metalness: 0
+            });
+
+            const ground = new THREE.Mesh(geo, mat);
+            ground.receiveShadow = true;
+            ground.name = 'ground';
+            scene.add(ground);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // SCOUT (Player - follows mouse)
+        // ─────────────────────────────────────────────────────────────
+        function createScout() {
+            scout = new THREE.Group();
+            scout.name = 'scout';
+
+            // Body
+            const bodyGeo = new THREE.CylinderGeometry(0.24, 0.32, 0.5, 8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.scoutBody, roughness: 0.35 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.35;
+            body.castShadow = true;
+            scout.add(body);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.2, 10, 10);
+            const headMat = new THREE.MeshStandardMaterial({ color: COLORS.scoutDark, roughness: 0.25 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 0.68;
+            head.castShadow = true;
+            scout.add(head);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.045, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            [-0.08, 0.08].forEach(x => {
+                const eye = new THREE.Mesh(eyeGeo, eyeMat);
+                eye.position.set(x, 0.71, 0.14);
+                scout.add(eye);
+            });
+
+            // Antenna
+            const antGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.2, 6);
+            const antMat = new THREE.MeshStandardMaterial({ color: COLORS.scoutDark });
+            const antenna = new THREE.Mesh(antGeo, antMat);
+            antenna.position.y = 0.92;
+            scout.add(antenna);
+
+            // Antenna tip
+            const tipGeo = new THREE.SphereGeometry(0.04, 10, 10);
+            const tipMat = new THREE.MeshBasicMaterial({ color: COLORS.pink });
+            const tip = new THREE.Mesh(tipGeo, tipMat);
+            tip.position.y = 1.02;
+            tip.name = 'antennaTip';
+            scout.add(tip);
+
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.16, 6);
+            const legMat = new THREE.MeshStandardMaterial({ color: COLORS.scoutDark });
+            [-0.12, 0.12].forEach(x => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(x, 0.08, 0);
+                leg.castShadow = true;
+                scout.add(leg);
+            });
+
+            scout.position.set(0, 0, 0);
+            scout.userData = { 
+                facingAngle: 0,
+                targetPosition: new THREE.Vector3(0, 0, 0),
+                groundY: 0
+            };
+            scene.add(scout);
+
+            // Scout physics body (for collisions)
+            scout.userData.physicsBody = new PhysicsBody(scout, {
+                radius: CONFIG.scoutRadius,
+                mass: 2.0,
+                friction: 0.9,
+                bounce: 0.2,
+                type: 'player'
+            });
+            physicsBodies.push(scout.userData.physicsBody);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // CLOUDFENS (Sheep Companions)
+        // ─────────────────────────────────────────────────────────────
+        function createCloudfens() {
+            for (let i = 0; i < CONFIG.cloudfenCount; i++) {
+                const cf = createSingleCloudfen();
+                
+                const angle = (i / CONFIG.cloudfenCount) * Math.PI * 2 + Math.random() * 0.5;
+                const radius = 2 + Math.random() * 2;
+                cf.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+                
+                cf.userData = {
+                    bobPhase: Math.random() * Math.PI * 2,
+                    bobSpeed: 0.8 + Math.random() * 0.4,
+                    state: 'idle',
+                    idleTarget: null,
+                    idleTimer: 0,
+                    chargeVelocity: new THREE.Vector3(),
+                    chargeActive: false,
+                    groundY: 0.32
+                };
+
+                // Physics body for each cloudfen
+                cf.userData.physicsBody = new PhysicsBody(cf, {
+                    radius: CONFIG.cloudfenRadius,
+                    mass: CONFIG.cloudfenMass,
+                    friction: CONFIG.cloudfenFriction,
+                    bounce: 0.4,
+                    type: 'cloudfen'
+                });
+                physicsBodies.push(cf.userData.physicsBody);
+                
+                cloudfens.push(cf);
+                scene.add(cf);
+            }
+        }
+
+        function createSingleCloudfen() {
+            const group = new THREE.Group();
+
+            // Body (fluffy)
+            const bodyGeo = new THREE.IcosahedronGeometry(0.38, 1);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.cloudfenWhite, roughness: 0.85 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.35;
+            body.castShadow = true;
+            group.add(body);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.14, 10, 10);
+            const headMat = new THREE.MeshStandardMaterial({ color: COLORS.cloudfenDark, roughness: 0.75 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0.28, 0.38, 0);
+            head.castShadow = true;
+            group.add(head);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.028, 6, 6);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            [0.045, -0.045].forEach(z => {
+                const eye = new THREE.Mesh(eyeGeo, eyeMat);
+                eye.position.set(0.38, 0.41, z);
+                group.add(eye);
+            });
+
+            // Ears
+            const earGeo = new THREE.ConeGeometry(0.055, 0.13, 4);
+            const earMat = new THREE.MeshStandardMaterial({ color: COLORS.cloudfenDark });
+            [[0.24, 0.52, 0.07, 0.28], [0.24, 0.52, -0.07, -0.28]].forEach(([x, y, z, rot]) => {
+                const ear = new THREE.Mesh(earGeo, earMat);
+                ear.position.set(x, y, z);
+                ear.rotation.z = rot;
+                group.add(ear);
+            });
+
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.17, 6);
+            const legMat = new THREE.MeshStandardMaterial({ color: COLORS.cloudfenDark });
+            [[-0.13, 0.08], [-0.13, -0.08], [0.09, 0.09], [0.09, -0.09]].forEach(([x, z]) => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(x, 0.085, z);
+                leg.castShadow = true;
+                group.add(leg);
+            });
+
+            return group;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // BIRD (Sound Source)
+        // ─────────────────────────────────────────────────────────────
+        function createBird() {
+            bird = new THREE.Group();
+            bird.name = 'bird';
+
+            // Body
+            const bodyGeo = new THREE.SphereGeometry(0.28, 10, 10);
+            bodyGeo.scale(1, 0.75, 1.15);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: COLORS.coral, roughness: 0.55 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.28;
+            body.castShadow = true;
+            bird.add(body);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.14, 10, 10);
+            const headMat = new THREE.MeshStandardMaterial({ color: COLORS.pink, roughness: 0.45 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0.22, 0.42, 0);
+            head.castShadow = true;
+            bird.add(head);
+
+            // Beak
+            const beakGeo = new THREE.ConeGeometry(0.045, 0.14, 4);
+            const beakMat = new THREE.MeshStandardMaterial({ color: COLORS.sand });
+            const beak = new THREE.Mesh(beakGeo, beakMat);
+            beak.position.set(0.35, 0.42, 0);
+            beak.rotation.z = -Math.PI / 2;
+            bird.add(beak);
+
+            // Eye
+            const eyeGeo = new THREE.SphereGeometry(0.03, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: COLORS.cloudfenDark });
+            const eye = new THREE.Mesh(eyeGeo, eyeMat);
+            eye.position.set(0.28, 0.46, 0.09);
+            bird.add(eye);
+
+            // Wings
+            const wingGeo = new THREE.BoxGeometry(0.14, 0.045, 0.32);
+            const wingMat = new THREE.MeshStandardMaterial({ color: COLORS.coral });
+            [0.14, -0.14].forEach(z => {
+                const wing = new THREE.Mesh(wingGeo, wingMat);
+                wing.position.set(0, 0.3, z);
+                wing.name = z > 0 ? 'wingL' : 'wingR';
+                bird.add(wing);
+            });
+
+            // Sound wave ring
+            const waveGeo = new THREE.RingGeometry(0.28, 0.34, 20);
+            const waveMat = new THREE.MeshBasicMaterial({ 
+                color: COLORS.teal, 
+                transparent: true, 
+                opacity: 0,
+                side: THREE.DoubleSide 
+            });
+            const wave = new THREE.Mesh(waveGeo, waveMat);
+            wave.rotation.x = -Math.PI / 2;
+            wave.position.y = 0.45;
+            wave.name = 'soundWave';
+            bird.add(wave);
+
+            bird.position.set(-8, 0, -6);
+            bird.userData = {
+                homePosition: new THREE.Vector3(-8, 0, -6),
+                patrolAngle: 0,
+                callTimer: CONFIG.birdCallInterval[0] + Math.random() * (CONFIG.birdCallInterval[1] - CONFIG.birdCallInterval[0]),
+                isCalling: false,
+                callDuration: 0
+            };
+
+            scene.add(bird);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // TREES
+        // ─────────────────────────────────────────────────────────────
+        function createTrees() {
+            const positions = [[-10, -8], [11, 5], [-5, 11], [8, -10], [0, 14]];
+            positions.slice(0, CONFIG.treeCount).forEach((pos, i) => {
+                const tree = createSingleTree();
+                tree.position.set(pos[0] + (Math.random() - 0.5) * 2, 0, pos[1] + (Math.random() - 0.5) * 2);
+                tree.userData = { shaking: false, shakeTime: 0 };
+                trees.push(tree);
+                scene.add(tree);
+
+                // Static physics body for tree
+                const treeBody = new PhysicsBody(tree, {
+                    radius: CONFIG.treeRadius,
+                    mass: 100,
+                    isStatic: true,
+                    type: 'tree',
+                    onCollide: (other) => {
+                        if (other.type === 'cloudfen' && other.velocity.length() > 3) {
+                            if (!tree.userData.shaking) {
+                                tree.userData.shaking = true;
+                                tree.userData.shakeTime = 0.5;
+                            }
+                        }
+                    }
+                });
+                physicsBodies.push(treeBody);
+            });
+        }
+
+        function createSingleTree() {
+            const group = new THREE.Group();
+
+            // Trunk
+            const trunkGeo = new THREE.CylinderGeometry(0.28, 0.4, 2.0, 8);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: COLORS.treeTrunk, roughness: 0.75 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 1.0;
+            trunk.castShadow = true;
+            group.add(trunk);
+
+            // Canopy
+            const canopyMat = new THREE.MeshStandardMaterial({ color: COLORS.treeCanopy, roughness: 0.65 });
+            [[0, 2.4, 0, 0.9], [0.45, 2.7, 0.28, 0.65], [-0.4, 2.55, -0.18, 0.6], [0.18, 3.0, -0.22, 0.5]].forEach(([x, y, z, r]) => {
+                const sphereGeo = new THREE.SphereGeometry(r, 10, 10);
+                const sphere = new THREE.Mesh(sphereGeo, canopyMat);
+                sphere.position.set(x, y, z);
+                sphere.castShadow = true;
+                group.add(sphere);
+            });
+
+            // Visual moss balls in tree
+            const mossMat = new THREE.MeshStandardMaterial({ color: COLORS.teal, roughness: 0.55, emissive: COLORS.teal, emissiveIntensity: 0.1 });
+            for (let i = 0; i < 2; i++) {
+                const mossGeo = new THREE.SphereGeometry(0.16, 8, 8);
+                const moss = new THREE.Mesh(mossGeo, mossMat);
+                moss.position.set((Math.random() - 0.5) * 0.7, 2.0 + Math.random() * 0.5, (Math.random() - 0.5) * 0.7);
+                group.add(moss);
+            }
+
+            return group;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // FLOWER CLUSTERS
+        // ─────────────────────────────────────────────────────────────
+        function createFlowerClusters() {
+            const positions = [[4.5, 2.5], [-5.5, 8], [10, -4.5], [-11, -1.5], [0, -11], [7, 8]];
+            positions.slice(0, CONFIG.flowerClusterCount).forEach((pos) => {
+                const cluster = createSingleFlowerCluster();
+                cluster.position.set(pos[0] + (Math.random() - 0.5) * 2, 0, pos[1] + (Math.random() - 0.5) * 2);
+                cluster.userData = { bloomed: false };
+                flowerClusters.push(cluster);
+                scene.add(cluster);
+            });
+        }
+
+        function createSingleFlowerCluster() {
+            const group = new THREE.Group();
+            const count = 5 + Math.floor(Math.random() * 3);
+
+            for (let i = 0; i < count; i++) {
+                const flower = new THREE.Group();
+                
+                const stemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.28 + Math.random() * 0.18, 6);
+                const stemMat = new THREE.MeshStandardMaterial({ color: COLORS.grayMuted });
+                const stem = new THREE.Mesh(stemGeo, stemMat);
+                stem.position.y = 0.14;
+                stem.name = 'stem';
+                flower.add(stem);
+
+                const budGeo = new THREE.SphereGeometry(0.07, 8, 8);
+                budGeo.scale(1, 1.5, 1);
+                const budMat = new THREE.MeshStandardMaterial({ color: COLORS.grayLight });
+                const bud = new THREE.Mesh(budGeo, budMat);
+                bud.position.y = 0.32 + Math.random() * 0.1;
+                bud.name = 'bud';
+                flower.add(bud);
+
+                const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+                const radius = 0.28 + Math.random() * 0.4;
+                flower.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+                flower.rotation.y = Math.random() * Math.PI;
+
+                group.add(flower);
+            }
+
+            return group;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // WATER PUDDLES
+        // ─────────────────────────────────────────────────────────────
+        function createWaterPuddles() {
+            const positions = [[6, 10], [-10, 5]];
+            positions.slice(0, CONFIG.waterPuddleCount).forEach((pos) => {
+                const puddle = createSingleWaterPuddle();
+                puddle.position.set(pos[0], 0.03, pos[1]);
+                puddle.userData = { lilyCount: 0, maxLilies: 3 };
+                waterPuddles.push(puddle);
+                scene.add(puddle);
+            });
+        }
+
+        function createSingleWaterPuddle() {
+            const group = new THREE.Group();
+
+            const waterGeo = new THREE.CircleGeometry(2.0, 28);
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: COLORS.tealBright,
+                roughness: 0.08,
+                metalness: 0.22,
+                transparent: true,
+                opacity: 0.6
+            });
+            const water = new THREE.Mesh(waterGeo, waterMat);
+            water.rotation.x = -Math.PI / 2;
+            group.add(water);
+
+            const edgeGeo = new THREE.RingGeometry(1.85, 2.1, 28);
+            const edgeMat = new THREE.MeshStandardMaterial({ color: COLORS.sandDark });
+            const edge = new THREE.Mesh(edgeGeo, edgeMat);
+            edge.rotation.x = -Math.PI / 2;
+            edge.position.y = 0.015;
+            group.add(edge);
+
+            return group;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // MOSS BALLS (pushable)
+        // ─────────────────────────────────────────────────────────────
+        function createMossBalls() {
+            const positions = [[3, -3.5], [-4, 4.5], [8, 7], [-6, -7]];
+            positions.slice(0, CONFIG.mossBallCount).forEach((pos) => {
+                const mb = createSingleMossBall();
+                mb.position.set(pos[0], 0.4, pos[1]);
+                mb.userData = { groundY: 0.4, rolling: false };
+                
+                mb.userData.physicsBody = new PhysicsBody(mb, {
+                    radius: CONFIG.mossBallRadius,
+                    mass: CONFIG.mossBallMass,
+                    friction: CONFIG.mossBallFriction,
+                    bounce: CONFIG.mossBallBounce,
+                    type: 'mossBall',
+                    onCollide: (other) => {
+                        if (other.type === 'cloudfen') {
+                            mb.userData.rolling = true;
+                        }
+                    }
+                });
+                physicsBodies.push(mb.userData.physicsBody);
+                
+                mossBalls.push(mb);
+                scene.add(mb);
+            });
+        }
+
+        function createSingleMossBall() {
+            const geo = new THREE.SphereGeometry(0.4, 14, 14);
+            const mat = new THREE.MeshStandardMaterial({
+                color: COLORS.teal,
+                roughness: 0.45,
+                emissive: COLORS.teal,
+                emissiveIntensity: 0.12
+            });
+            const ball = new THREE.Mesh(geo, mat);
+            ball.castShadow = true;
+            return ball;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // DECORATIONS
+        // ─────────────────────────────────────────────────────────────
+        function createDecorations() {
+            // Rocks (static colliders)
+            for (let i = 0; i < CONFIG.rockCount; i++) {
+                const geo = new THREE.DodecahedronGeometry(0.35 + Math.random() * 0.3, 0);
+                const mat = new THREE.MeshStandardMaterial({ color: COLORS.grayMuted, roughness: 0.88 });
+                const rock = new THREE.Mesh(geo, mat);
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 5 + Math.random() * 25;
+                rock.position.set(Math.cos(angle) * radius, 0.18, Math.sin(angle) * radius);
+                rock.rotation.set(Math.random(), Math.random(), Math.random());
+                rock.scale.setScalar(0.45 + Math.random() * 0.55);
+                rock.castShadow = true;
+                scene.add(rock);
+                rocks.push(rock);
+
+                // Add small rocks as static colliders
+                if (rock.scale.x > 0.7) {
+                    const rockBody = new PhysicsBody(rock, {
+                        radius: 0.3 * rock.scale.x,
+                        isStatic: true,
+                        type: 'rock'
+                    });
+                    physicsBodies.push(rockBody);
+                }
+            }
+
+            // Grass patches
+            for (let i = 0; i < CONFIG.grassPatchCount; i++) {
+                const patch = new THREE.Group();
+                const blades = 5 + Math.floor(Math.random() * 5);
+                for (let j = 0; j < blades; j++) {
+                    const h = 0.18 + Math.random() * 0.28;
+                    const geo = new THREE.ConeGeometry(0.028, h, 4);
+                    const mat = new THREE.MeshStandardMaterial({ color: COLORS.sandDark });
+                    const blade = new THREE.Mesh(geo, mat);
+                    blade.position.set((Math.random() - 0.5) * 0.45, h / 2, (Math.random() - 0.5) * 0.45);
+                    blade.rotation.x = (Math.random() - 0.5) * 0.28;
+                    blade.rotation.z = (Math.random() - 0.5) * 0.28;
+                    patch.add(blade);
+                }
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 4 + Math.random() * 25;
+                patch.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+                scene.add(patch);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INPUT
+        // ═══════════════════════════════════════════════════════════════
+        function setupInput() {
+            const canvas = document.getElementById('game-canvas');
+            const cursor = document.getElementById('cursor');
+
+            // Mouse move - update cursor and target position
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+                
+                mouseScreen.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouseScreen.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                updateMouseWorldPosition();
+            });
+
+            // Mouse down
+            canvas.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                if (e.button === 0) { // Left click
+                    isLeftMouseDown = true;
+                    onLeftMouseDown();
+                } else if (e.button === 2) { // Right click
+                    isRightMouseDown = true;
+                    onRightMouseDown();
+                }
+            });
+
+            canvas.addEventListener('mouseup', (e) => {
+                if (e.button === 0) {
+                    isLeftMouseDown = false;
+                    onLeftMouseUp();
+                } else if (e.button === 2) {
+                    isRightMouseDown = false;
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isLeftMouseDown = false;
+                isRightMouseDown = false;
+                onLeftMouseUp();
+            });
+
+            // Prevent context menu on right click
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Touch support
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                mouseScreen.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                mouseScreen.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+                updateMouseWorldPosition();
+                
+                // Single touch = move + gather
+                isLeftMouseDown = true;
+                onLeftMouseDown();
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                mouseScreen.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                mouseScreen.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+                updateMouseWorldPosition();
+            });
+
+            canvas.addEventListener('touchend', (e) => {
+                isLeftMouseDown = false;
+                onLeftMouseUp();
+            });
+
+            // Keyboard (space for charge if unlocked)
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !e.repeat) {
+                    e.preventDefault();
+                    if (hasChargeAbility) {
+                        triggerCharge();
+                    }
+                }
+            });
+        }
+
+        function updateMouseWorldPosition() {
+            if (!camera || !scene) return;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouseScreen, camera);
+            
+            const ground = scene.getObjectByName('ground');
+            if (ground) {
+                const hits = raycaster.intersectObject(ground);
+                if (hits.length > 0) {
+                    mouseWorld.copy(hits[0].point);
+                    mouseWorld.y = 0;
+                }
+            }
+        }
+
+        function onLeftMouseDown() {
+            const cursor = document.getElementById('cursor');
+            
+            // Check if near bird and bird is calling
+            if (canRecord()) {
+                startRecording();
+                cursor.classList.add('near-bird');
+            } else {
+                // Start gathering
+                startGather();
+                cursor.classList.add('gathering');
+            }
+        }
+
+        function onLeftMouseUp() {
+            const cursor = document.getElementById('cursor');
+            cursor.classList.remove('gathering', 'near-bird');
+            
+            if (isRecording) stopRecording();
+            if (isGathering) stopGather();
+        }
+
+        function onRightMouseDown() {
+            if (hasChargeAbility) {
+                triggerCharge();
+                const cursor = document.getElementById('cursor');
+                cursor.classList.add('charging');
+                setTimeout(() => cursor.classList.remove('charging'), 200);
+            }
+        }
+
+        function canRecord() {
+            if (!bird || hasChargeAbility) return false;
+            const dist = scout.position.distanceTo(bird.position);
+            return dist < CONFIG.birdRecordRange && birdIsCalling;
+        }
+
+        function startRecording() {
+            isRecording = true;
+            recordStartTime = performance.now();
+            document.getElementById('record-fill').style.height = '0%';
+            document.getElementById('prompt-record').classList.add('visible');
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('record-fill').style.height = '0%';
+            document.getElementById('prompt-record').classList.remove('visible');
+        }
+
+        function startGather() {
+            if (isGathering) return;
+            isGathering = true;
+            document.getElementById('btn-gather').classList.add('active');
+            
+            cloudfens.forEach(cf => cf.userData.state = 'following');
+        }
+
+        function stopGather() {
+            if (!isGathering) return;
+            isGathering = false;
+            document.getElementById('btn-gather').classList.remove('active');
+            
+            cloudfens.forEach(cf => {
+                if (cf.userData.state === 'following') cf.userData.state = 'idle';
+            });
+        }
+
+        function triggerCharge() {
+            if (!hasChargeAbility) return;
+            
+            // Direction Scout is facing
+            const dir = new THREE.Vector3(
+                Math.sin(scout.userData.facingAngle),
+                0,
+                Math.cos(scout.userData.facingAngle)
+            );
+
+            cloudfens.forEach(cf => {
+                cf.userData.state = 'charging';
+                cf.userData.chargeActive = true;
+                
+                // Apply impulse via physics
+                const impulse = dir.clone().multiplyScalar(CONFIG.cloudfenChargeSpeed);
+                cf.userData.physicsBody.velocity.add(impulse);
+            });
+        }
+
+        function unlockCharge() {
+            hasChargeAbility = true;
+            
+            const btn = document.getElementById('btn-charge');
+            btn.classList.remove('locked');
+            btn.classList.add('unlocking');
+            btn.querySelector('.control-icon').textContent = '⚡';
+            btn.querySelector('.control-name').textContent = 'Charge';
+            btn.querySelector('.control-hint').textContent = 'Right Click / Space';
+            setTimeout(() => btn.classList.remove('unlocking'), 600);
+
+            document.getElementById('prompt-record').classList.remove('visible');
+            const recorded = document.getElementById('prompt-recorded');
+            recorded.classList.add('visible');
+            setTimeout(() => recorded.classList.remove('visible'), 2500);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // GAME LOOP
+        // ═══════════════════════════════════════════════════════════════
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = Math.min(clock.getDelta(), 0.1);
+            const time = clock.getElapsedTime();
+
+            updateScout(delta, time);
+            updateCloudfens(delta, time);
+            updateBird(delta, time);
+            updateMossBalls(delta, time);
+            updateTrees(delta, time);
+            updateRecording();
+            updatePhysics(delta);
+            updateCamera();
+            updateCursorState();
+
+            renderer.render(scene, camera);
+        }
+
+        function updateScout(delta, time) {
+            // Smooth follow mouse position
+            const targetPos = mouseWorld.clone();
+            const dir = new THREE.Vector3().subVectors(targetPos, scout.position);
+            dir.y = 0;
+            const dist = dir.length();
+
+            if (dist > 0.15) {
+                // Move toward mouse
+                const moveSpeed = Math.min(dist * CONFIG.scoutLerp, CONFIG.scoutSpeed * delta);
+                dir.normalize();
+                
+                // Update physics body velocity instead of position directly
+                scout.userData.physicsBody.velocity.x = dir.x * CONFIG.scoutSpeed;
+                scout.userData.physicsBody.velocity.z = dir.z * CONFIG.scoutSpeed;
+                
+                // Face direction of movement
+                scout.userData.facingAngle = Math.atan2(dir.x, dir.z);
+                scout.rotation.y = scout.userData.facingAngle;
+                
+                // Walk bob
+                scout.position.y = Math.sin(time * 14) * 0.03;
+            } else {
+                // Idle
+                scout.userData.physicsBody.velocity.x *= 0.8;
+                scout.userData.physicsBody.velocity.z *= 0.8;
+                scout.position.y = Math.sin(time * 2.5) * 0.018;
+            }
+
+            // Antenna glow
+            const tip = scout.getObjectByName('antennaTip');
+            if (tip) {
+                const glow = isGathering ? 0.85 : (0.6 + Math.sin(time * 3.5) * 0.12);
+                tip.material.color.setHSL(0.95, 0.55, glow);
+            }
+        }
+
+        function updateCloudfens(delta, time) {
+            cloudfens.forEach((cf, i) => {
+                const d = cf.userData;
+                const body = d.physicsBody;
+                const bob = Math.sin(time * d.bobSpeed + d.bobPhase) * 0.07;
+
+                switch (d.state) {
+                    case 'idle':
+                        // Wander near Scout
+                        if (!d.idleTarget || d.idleTimer <= 0) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const radius = 1.8 + Math.random() * CONFIG.cloudfenIdleRadius;
+                            d.idleTarget = new THREE.Vector3(
+                                scout.position.x + Math.cos(angle) * radius,
+                                0,
+                                scout.position.z + Math.sin(angle) * radius
+                            );
+                            d.idleTimer = 2.5 + Math.random() * 3.5;
+                        }
+                        d.idleTimer -= delta;
+
+                        const idleDir = new THREE.Vector3().subVectors(d.idleTarget, cf.position);
+                        idleDir.y = 0;
+                        if (idleDir.length() > 0.5) {
+                            idleDir.normalize();
+                            body.velocity.x += idleDir.x * 2 * delta;
+                            body.velocity.z += idleDir.z * 2 * delta;
+                            cf.rotation.y = Math.atan2(idleDir.x, idleDir.z);
+                        }
+                        break;
+
+                    case 'following':
+                        const followDir = new THREE.Vector3().subVectors(scout.position, cf.position);
+                        followDir.y = 0;
+                        const followDist = followDir.length();
+                        if (followDist > 1.5) {
+                            followDir.normalize();
+                            body.velocity.x += followDir.x * CONFIG.cloudfenFollowSpeed * delta * 2;
+                            body.velocity.z += followDir.z * CONFIG.cloudfenFollowSpeed * delta * 2;
+                            cf.rotation.y = Math.atan2(followDir.x, followDir.z);
+                        }
+                        break;
+
+                    case 'charging':
+                        if (d.chargeActive) {
+                            cf.rotation.y = Math.atan2(body.velocity.x, body.velocity.z);
+                            
+                            if (body.velocity.length() < 0.8) {
+                                d.chargeActive = false;
+                                d.state = 'idle';
+                            }
+                        }
+                        break;
+                }
+
+                // Bob animation
+                cf.position.y = d.groundY + bob;
+                cf.rotation.z = Math.sin(time * d.bobSpeed + d.bobPhase) * 0.05;
+            });
+        }
+
+        function updateBird(delta, time) {
+            if (!bird) return;
+            const d = bird.userData;
+
+            // Patrol
+            d.patrolAngle += delta * 0.45;
+            const px = d.homePosition.x + Math.cos(d.patrolAngle) * CONFIG.birdPatrolRadius;
+            const pz = d.homePosition.z + Math.sin(d.patrolAngle) * CONFIG.birdPatrolRadius;
+            bird.position.x += (px - bird.position.x) * delta * 2.2;
+            bird.position.z += (pz - bird.position.z) * delta * 2.2;
+            bird.position.y = 0.45 + Math.sin(time * 2.8) * 0.1;
+            bird.rotation.y = d.patrolAngle + Math.PI / 2;
+
+            // Wing flap
+            const wings = [bird.getObjectByName('wingL'), bird.getObjectByName('wingR')];
+            wings.forEach((w, i) => {
+                if (w) w.rotation.x = Math.sin(time * 10) * 0.18 * (i === 0 ? 1 : -1);
+            });
+
+            // Calling
+            d.callTimer -= delta * 1000;
+            if (d.callTimer <= 0 && !d.isCalling) {
+                d.isCalling = true;
+                birdIsCalling = true;
+                d.callDuration = 2000;
+
+                const wave = bird.getObjectByName('soundWave');
+                if (wave) wave.material.opacity = 0.55;
+
+                // Show record prompt if near
+                if (!hasChargeAbility) {
+                    const dist = scout.position.distanceTo(bird.position);
+                    if (dist < CONFIG.birdRecordRange) {
+                        // Prompt will show when user clicks
+                    }
+                }
+            }
+
+            if (d.isCalling) {
+                d.callDuration -= delta * 1000;
+                const wave = bird.getObjectByName('soundWave');
+                if (wave) {
+                    const progress = 1 - d.callDuration / 2000;
+                    wave.scale.setScalar(1 + progress * 1.8);
+                    wave.material.opacity = 0.55 * (d.callDuration / 2000);
+                }
+
+                if (d.callDuration <= 0) {
+                    d.isCalling = false;
+                    birdIsCalling = false;
+                    d.callTimer = CONFIG.birdCallInterval[0] + Math.random() * (CONFIG.birdCallInterval[1] - CONFIG.birdCallInterval[0]);
+                    
+                    const wave = bird.getObjectByName('soundWave');
+                    if (wave) {
+                        wave.material.opacity = 0;
+                        wave.scale.setScalar(1);
+                    }
+                    
+                    if (!isRecording) {
+                        document.getElementById('prompt-record').classList.remove('visible');
+                    }
+                }
+            }
+        }
+
+        function updateMossBalls(delta, time) {
+            mossBalls.forEach((mb, idx) => {
+                const body = mb.userData.physicsBody;
+                
+                // Roll animation based on velocity
+                if (body.velocity.length() > 0.1) {
+                    mb.rotation.x += body.velocity.z * delta * 2.5;
+                    mb.rotation.z -= body.velocity.x * delta * 2.5;
+                }
+
+                // Check flower clusters
+                flowerClusters.forEach(fc => {
+                    if (!fc.userData.bloomed) {
+                        const dist = mb.position.distanceTo(fc.position);
+                        if (dist < 1.3 && body.velocity.length() > 0.5) {
+                            bloomFlowers(fc);
+                        }
+                    }
+                });
+
+                // Check water puddles
+                waterPuddles.forEach(wp => {
+                    const dist = mb.position.distanceTo(wp.position);
+                    if (dist < 1.6 && wp.userData.lilyCount < wp.userData.maxLilies) {
+                        createLilyPad(wp);
+                        
+                        // Remove moss ball
+                        const bodyIdx = physicsBodies.indexOf(body);
+                        if (bodyIdx > -1) physicsBodies.splice(bodyIdx, 1);
+                        scene.remove(mb);
+                        mossBalls.splice(idx, 1);
+                    }
+                });
+            });
+        }
+
+        function updateTrees(delta, time) {
+            trees.forEach(tree => {
+                if (tree.userData.shaking) {
+                    tree.userData.shakeTime -= delta;
+                    tree.rotation.z = Math.sin(tree.userData.shakeTime * 40) * 0.045;
+
+                    if (tree.userData.shakeTime <= 0) {
+                        tree.userData.shaking = false;
+                        tree.rotation.z = 0;
+                        dropMossBall(tree.position);
+                    }
+                }
+            });
+        }
+
+        function updateRecording() {
+            if (!isRecording) return;
+
+            const elapsed = performance.now() - recordStartTime;
+            const progress = Math.min(elapsed / CONFIG.recordDuration, 1);
+            document.getElementById('record-fill').style.height = (progress * 100) + '%';
+
+            if (!canRecord()) {
+                stopRecording();
+                return;
+            }
+
+            if (progress >= 1) {
+                stopRecording();
+                unlockCharge();
+            }
+        }
+
+        function updateCamera() {
+            const tx = scout.position.x;
+            const tz = scout.position.z + CONFIG.cameraDistance;
+            camera.position.x += (tx - camera.position.x) * CONFIG.cameraLerp;
+            camera.position.z += (tz - camera.position.z) * CONFIG.cameraLerp;
+            camera.lookAt(scout.position.x, 0, scout.position.z);
+        }
+
+        function updateCursorState() {
+            const cursor = document.getElementById('cursor');
+            
+            // Check if near bird
+            if (bird && !hasChargeAbility) {
+                const dist = scout.position.distanceTo(bird.position);
+                if (dist < CONFIG.birdRecordRange && birdIsCalling) {
+                    if (!cursor.classList.contains('near-bird') && !isLeftMouseDown) {
+                        cursor.classList.add('near-bird');
+                    }
+                } else {
+                    if (!isLeftMouseDown) {
+                        cursor.classList.remove('near-bird');
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WORLD INTERACTIONS
+        // ═══════════════════════════════════════════════════════════════
+        function bloomFlowers(cluster) {
+            cluster.userData.bloomed = true;
+            
+            cluster.children.forEach((flower, i) => {
+                setTimeout(() => {
+                    const stem = flower.getObjectByName('stem');
+                    const bud = flower.getObjectByName('bud');
+                    if (stem) stem.material.color.setHex(COLORS.tealBright);
+                    if (bud) {
+                        bud.material.color.setHex(COLORS.pink);
+                        bud.scale.setScalar(1.5);
+                    }
+                }, i * 90);
+            });
+
+            document.getElementById('bloom-flash').classList.add('active');
+            setTimeout(() => document.getElementById('bloom-flash').classList.remove('active'), 800);
+
+            spawnButterflies(cluster.position);
+        }
+
+        function spawnButterflies(pos) {
+            for (let i = 0; i < 5; i++) {
+                const geo = new THREE.PlaneGeometry(0.14, 0.1);
+                const mat = new THREE.MeshBasicMaterial({ color: COLORS.pink, side: THREE.DoubleSide });
+                const butterfly = new THREE.Mesh(geo, mat);
+                butterfly.position.copy(pos);
+                butterfly.position.y = 0.5 + Math.random() * 0.35;
+                scene.add(butterfly);
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.9 + Math.random() * 0.6;
+                const start = clock.getElapsedTime();
+
+                (function animateButterfly() {
+                    const elapsed = clock.getElapsedTime() - start;
+                    if (elapsed > 4.5) {
+                        scene.remove(butterfly);
+                        return;
+                    }
+                    butterfly.position.x += Math.cos(angle) * speed * 0.009;
+                    butterfly.position.z += Math.sin(angle) * speed * 0.009;
+                    butterfly.position.y += 0.018 + Math.sin(elapsed * 14) * 0.009;
+                    butterfly.rotation.y = elapsed * 7;
+                    requestAnimationFrame(animateButterfly);
+                })();
+            }
+        }
+
+        function createLilyPad(puddle) {
+            puddle.userData.lilyCount++;
+
+            const geo = new THREE.CircleGeometry(0.28, 10);
+            const mat = new THREE.MeshStandardMaterial({ color: COLORS.tealBright, roughness: 0.45 });
+            const lily = new THREE.Mesh(geo, mat);
+            lily.rotation.x = -Math.PI / 2;
+            lily.position.set((Math.random() - 0.5) * 1.6, 0.05, (Math.random() - 0.5) * 1.6);
+            puddle.add(lily);
+
+            document.getElementById('bloom-flash').classList.add('active');
+            setTimeout(() => document.getElementById('bloom-flash').classList.remove('active'), 800);
+        }
+
+        function dropMossBall(treePos) {
+            const mb = createSingleMossBall();
+            mb.position.set(
+                treePos.x + (Math.random() - 0.5) * 1.8,
+                2.0,
+                treePos.z + (Math.random() - 0.5) * 1.8
+            );
+            mb.userData = { groundY: 0.4, rolling: false };
+            
+            mb.userData.physicsBody = new PhysicsBody(mb, {
+                radius: CONFIG.mossBallRadius,
+                mass: CONFIG.mossBallMass,
+                friction: CONFIG.mossBallFriction,
+                bounce: CONFIG.mossBallBounce,
+                type: 'mossBall'
+            });
+            mb.userData.physicsBody.velocity.y = -2;
+            physicsBodies.push(mb.userData.physicsBody);
+            
+            mossBalls.push(mb);
+            scene.add(mb);
+
+            // Fall animation
+            const startY = mb.position.y;
+            const startTime = clock.getElapsedTime();
+            (function fall() {
+                const elapsed = clock.getElapsedTime() - startTime;
+                const y = startY - elapsed * elapsed * 7;
+                if (y <= 0.4) {
+                    mb.position.y = 0.4;
+                    mb.userData.physicsBody.velocity.y = 0;
+                    return;
+                }
+                mb.position.y = y;
+                requestAnimationFrame(fall);
+            })();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════════════════════
+        init();
+
+    })();
+    </script>
+</body>
+</html>

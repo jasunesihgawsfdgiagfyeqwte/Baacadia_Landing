@@ -16,7 +16,7 @@
         particleCount: { desktop: 50, mobile: 20 },
         cloudfenCount: { desktop: 8, mobile: 4 },
         bobSpeed: { min: 0.8, max: 1.2 },
-        rotateSpeed: { min: 0.05, max: 0.12 },
+        rotateSpeed: { min: 0.08, max: 0.12 },
         jumpHeight: { min: 0.15, max: 0.25 },
         initialPosition: { 
             desktop: { x: 0, y: 1, z: 12 },

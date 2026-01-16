@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baacadia - Play Demo</title>
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/effects.css">
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+        <!-- Sound Slots -->
+        <div id="sound-slots">
+            <div class="sound-slot" data-slot="1">
+                <span class="slot-key">1</span>
+                <div class="slot-icon empty"></div>
+                <span class="slot-name">-</span>
+            </div>
+            <div class="sound-slot" data-slot="2">
+                <span class="slot-key">2</span>
+                <div class="slot-icon empty"></div>
+                <span class="slot-name">-</span>
+            </div>
+        </div>
+
+        <!-- Volume Indicator -->
+        <div id="volume-indicator">
+            <div class="volume-bar">
+                <div class="volume-fill"></div>
+            </div>
+            <span class="volume-label">Volume</span>
+        </div>
+
+        <!-- Recording Progress -->
+        <div id="record-progress" class="hidden">
+            <div class="record-ring">
+                <svg viewBox="0 0 100 100">
+                    <circle class="ring-bg" cx="50" cy="50" r="45"/>
+                    <circle class="ring-fill" cx="50" cy="50" r="45"/>
+                </svg>
+                <span class="record-icon">●</span>
+            </div>
+            <span class="record-label">Recording...</span>
+        </div>
+
+        <!-- Interaction Prompt -->
+        <div id="interaction-prompt" class="hidden">
+            <span class="prompt-key">E</span>
+            <span class="prompt-text">Pet</span>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div id="tutorial" class="hidden">
+        <div class="tutorial-box">
+            <p class="tutorial-text"></p>
+            <span class="tutorial-hint">Press any key to continue</span>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="hidden">
+        <div class="victory-content">
+            <h1>Baacadia!</h1>
+            <p>You've mastered the art of acoustic shepherding.</p>
+            <div class="victory-actions">
+                <a href="https://store.steampowered.com/app/YOUR_APP_ID" class="btn-wishlist" target="_blank">
+                    Wishlist on Steam
+                </a>
+                <button class="btn-replay">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Loading Baacadia...</p>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <!-- Post-processing for Moebius shader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+
+    <!-- Game Modules -->
+    <script type="module" src="js/core/Game.js"></script>
+</body>
+</html>

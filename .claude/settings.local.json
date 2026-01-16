@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check:*)",
+      "Bash(for f in play/js/**/*.js)",
+      "Bash(do node --check \"$f\")",
+      "Bash(echo:*)",
+      "Bash(done)"
+    ]
+  }
+}

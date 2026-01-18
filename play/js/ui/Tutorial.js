@@ -1,6 +1,6 @@
 /**
  * Tutorial - Guided tutorial system
- * Simple notification-based hints, no blocking overlays
+ * Uses UIManager for displaying hints
  */
 export class Tutorial {
     constructor(game) {
@@ -9,6 +9,7 @@ export class Tutorial {
         // Tutorial state
         this.currentStep = 0;
         this.isActive = false;
+        this.currentTimer = null;
 
         // Tutorial steps - all use inline hints, no blocking overlay
         this.steps = [
@@ -33,8 +34,6 @@ export class Tutorial {
                 duration: 10000,
             },
         ];
-
-        this.currentHintEl = null;
     }
 
     start() {
@@ -61,36 +60,18 @@ export class Tutorial {
         const step = this.steps[index];
         this.currentStep = index;
 
-        // Remove previous hint
-        if (this.currentHintEl) {
-            this.currentHintEl.remove();
-            this.currentHintEl = null;
+        // Clear any previous timer
+        if (this.currentTimer) {
+            clearTimeout(this.currentTimer);
         }
 
-        // Create inline hint notification
-        const hint = document.createElement('div');
-        hint.className = 'tutorial-notification';
-        hint.innerHTML = step.text;
-        hint.style.cssText = `
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            border-left: 4px solid #4ecdc4;
-            font-size: 14px;
-            z-index: 200;
-            animation: fadeIn 0.3s ease;
-            pointer-events: none;
-        `;
-        document.body.appendChild(hint);
-        this.currentHintEl = hint;
+        // Show hint via UIManager
+        if (this.game.ui) {
+            this.game.ui.showTutorialHint(step.text, step.duration);
+        }
 
         // Auto advance after duration
-        setTimeout(() => {
+        this.currentTimer = setTimeout(() => {
             if (this.currentStep === index && this.isActive) {
                 this._advanceStep();
             }
@@ -98,15 +79,15 @@ export class Tutorial {
     }
 
     _advanceStep() {
-        // Fade out current hint
-        if (this.currentHintEl) {
-            this.currentHintEl.style.animation = 'fadeOut 0.3s ease forwards';
-            setTimeout(() => {
-                if (this.currentHintEl) {
-                    this.currentHintEl.remove();
-                    this.currentHintEl = null;
-                }
-            }, 300);
+        // Clear current timer
+        if (this.currentTimer) {
+            clearTimeout(this.currentTimer);
+            this.currentTimer = null;
+        }
+
+        // Hide current hint
+        if (this.game.ui) {
+            this.game.ui.hideTutorialHint();
         }
 
         // Show next step after a short delay
@@ -117,9 +98,14 @@ export class Tutorial {
 
     _complete() {
         this.isActive = false;
-        if (this.currentHintEl) {
-            this.currentHintEl.remove();
-            this.currentHintEl = null;
+
+        if (this.currentTimer) {
+            clearTimeout(this.currentTimer);
+            this.currentTimer = null;
+        }
+
+        if (this.game.ui) {
+            this.game.ui.hideTutorialHint();
         }
     }
 

@@ -222,13 +222,13 @@ export class SoundSystem {
         // Put in first empty slot, or slot 2 if both empty
         if (this.slots[1] === null) {
             this.slots[1] = type;
-            if (this.game.hud) {
-                this.game.hud.setSlotSound(1, type);
+            if (this.game.ui) {
+                this.game.ui.setSoundForSlot(1, type);
             }
         } else if (this.slots[2] === null) {
             this.slots[2] = type;
-            if (this.game.hud) {
-                this.game.hud.setSlotSound(2, type);
+            if (this.game.ui) {
+                this.game.ui.setSoundForSlot(2, type);
             }
         }
 

@@ -82,8 +82,11 @@ export class RecordSystem {
             this.game.soundSystem.unlockSound(soundType);
         }
 
-        // Show notification
-        this._showRecordComplete(soundType);
+        // Show notification via UIManager
+        if (this.game.ui) {
+            const slotNumber = this.game.soundSystem.slots[1] === soundType ? 1 : 2;
+            this.game.ui.notifySoundRecorded(soundType, slotNumber);
+        }
 
         // Trigger tutorial progression
         if (this.game.tutorial) {
@@ -96,43 +99,16 @@ export class RecordSystem {
         }
     }
 
-    _showRecordComplete(soundType) {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.innerHTML = `
-            <strong>${soundType.toUpperCase()}</strong> sound recorded!
-            <br><small>Press ${this.game.soundSystem.slots[1] === soundType ? '1' : '2'} to select</small>
-        `;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-
     _updateUI() {
-        const progressEl = document.getElementById('record-progress');
-        if (!progressEl) return;
+        // Update recording state in UIManager
+        if (!this.game.ui) return;
 
         if (this.isRecording) {
-            progressEl.classList.remove('hidden');
-
-            // Update ring progress
-            const ring = progressEl.querySelector('.ring-fill');
-            if (ring) {
-                const circumference = 2 * Math.PI * 45; // r=45 from SVG
-                const progress = this.recordProgress / this.recordDuration;
-                const offset = circumference * (1 - progress);
-                ring.style.strokeDashoffset = offset;
-            }
-
-            // Update label
-            const label = progressEl.querySelector('.record-label');
-            if (label) {
-                label.textContent = `Recording ${this.currentSoundType}...`;
-            }
+            const progress = this.recordProgress / this.recordDuration;
+            this.game.ui.showRecording(this.currentSoundType);
+            this.game.ui.updateRecordingProgress(progress);
         } else {
-            progressEl.classList.add('hidden');
+            this.game.ui.hideRecording();
         }
     }
 

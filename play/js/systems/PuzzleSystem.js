@@ -102,19 +102,10 @@ export class PuzzleSystem {
     _onExitUnblocked() {
         this.isExitOpen = true;
 
-        // Show notification
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.innerHTML = `
-            <strong>The path is clear!</strong>
-            <br><small>Lead your flock to Baacadia</small>
-        `;
-        notification.style.borderLeftColor = '#7ee787';
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        // Show notification via UIManager
+        if (this.game.ui) {
+            this.game.ui.notifyExitUnblocked();
+        }
 
         // Tutorial progression
         if (this.game.tutorial) {

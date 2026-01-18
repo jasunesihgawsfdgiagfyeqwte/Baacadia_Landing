@@ -177,6 +177,13 @@ export class Effects {
             // Apply gravity
             particle.velocity.y -= 9.8 * dt * 0.5;
 
+            // Billboard behavior - always face camera
+            if (particle.isBillboard && this.game.camera) {
+                particle.mesh.quaternion.copy(this.game.camera.quaternion);
+                // Rotate 180 degrees on Z axis to flip heart right-side up
+                particle.mesh.rotateZ(Math.PI);
+            }
+
             // Fade out
             const progress = particle.age / particle.lifetime;
             particle.mesh.material.opacity = 1 - progress;
@@ -218,25 +225,29 @@ export class Effects {
      * Spawn hearts when petting Cloudfen
      */
     spawnHearts(position) {
-        for (let i = 0; i < 3; i++) {
+        // Spawn 2-3 hearts for a flourish effect
+        const heartCount = 2 + Math.floor(Math.random() * 2);
+
+        for (let i = 0; i < heartCount; i++) {
             const heart = this._createHeart();
             heart.position.copy(position);
             heart.position.y += 1.5;
-            heart.position.x += (Math.random() - 0.5) * 0.5;
-            heart.position.z += (Math.random() - 0.5) * 0.5;
+            // Add random X and Z offset for spread
+            heart.position.x += (Math.random() - 0.5) * 0.6;
+            heart.position.z += (Math.random() - 0.5) * 0.6;
 
             this.game.scene.add(heart);
 
             this.particles.push({
                 mesh: heart,
                 velocity: new THREE.Vector3(
-                    (Math.random() - 0.5) * 2,
-                    2 + Math.random() * 2,
-                    (Math.random() - 0.5) * 2
+                    2 + Math.random() * 1.5,     // Upward with variation
+                    (Math.random() - 0.5) * 1.5  // Random Z velocity
                 ),
                 age: 0,
-                lifetime: 1.5,
-                startScale: 0.3,
+                lifetime: 1.5 + Math.random() * 0.5,
+                startScale: 0.5 + Math.random() * 0.3, // Varied sizes
+                isBillboard: true, // Mark as billboard to face camera
             });
         }
     }
@@ -264,8 +275,8 @@ export class Effects {
         });
 
         const heart = new THREE.Mesh(geometry, material);
-        heart.scale.setScalar(0.3);
-        heart.rotation.z = Math.PI;
+        heart.scale.setScalar(0.8); // Larger initial scale
+        // No rotation - keep heart right-side up!
 
         return heart;
     }

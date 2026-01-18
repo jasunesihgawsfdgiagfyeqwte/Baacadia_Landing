@@ -307,10 +307,21 @@ export class Player {
             }
         }
 
-        // Update UI prompts
-        if (this.game.hud) {
-            this.game.hud.showPetPrompt(this.nearbyCloudfen !== null);
-            this.game.hud.showRecordPrompt(this.nearbySoundSource !== null, this.nearbySoundSource?.type);
+        // Update UI prompts via UIManager
+        // Priority: Recording > Petting
+        if (this.game.ui) {
+            // Show record prompt if near sound source (highest priority)
+            if (this.nearbySoundSource !== null) {
+                this.game.ui.showInteractionPrompt(`record-${this.nearbySoundSource.type}`);
+            }
+            // Show pet prompt if near cloudfen (lower priority)
+            else if (this.nearbyCloudfen !== null) {
+                this.game.ui.showInteractionPrompt('pet');
+            }
+            // Hide prompt if nothing nearby
+            else {
+                this.game.ui.hideInteractionPrompt();
+            }
         }
 
         // Handle pet interaction

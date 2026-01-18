@@ -13,6 +13,7 @@ import { PuzzleSystem } from '../systems/PuzzleSystem.js';
 import { Scene as GameScene } from '../world/Scene.js';
 import { Environment } from '../world/Environment.js';
 import { Effects } from '../world/Effects.js';
+import { UIManager } from '../ui/UIManager.js';
 import { HUD } from '../ui/HUD.js';
 import { Tutorial } from '../ui/Tutorial.js';
 
@@ -41,7 +42,8 @@ class Game {
         this.effects = null;
 
         // UI
-        this.hud = null;
+        this.ui = null; // UIManager - centralized UI control
+        this.hud = null; // Deprecated - kept for backward compatibility
         this.tutorial = null;
 
         // Three.js core
@@ -64,12 +66,14 @@ class Game {
 
     async _init() {
         try {
+            // Initialize UI first so other systems can use it
+            this._initUI();
+
             this._initThree();
             this._initPostProcessing();
             await this._initSystems();
             await this._initWorld();
             await this._initEntities();
-            this._initUI();
             this._bindEvents();
 
             // Hide loading screen
@@ -151,12 +155,12 @@ class Game {
 
         // Connect input callbacks
         this.input.onSlotChange = (slot) => {
-            if (this.hud) this.hud.setActiveSlot(slot);
+            if (this.ui) this.ui.setActiveSlot(slot);
             if (this.soundSystem) this.soundSystem.setActiveSlot(slot);
         };
 
         this.input.onVolumeChange = (volume) => {
-            if (this.hud) this.hud.setVolume(volume);
+            if (this.ui) this.ui.setVolume(volume);
             if (this.soundSystem) this.soundSystem.setVolume(volume);
         };
 
@@ -215,6 +219,11 @@ class Game {
     }
 
     _initUI() {
+        // Initialize UIManager - centralized UI control
+        this.ui = new UIManager(this);
+
+        // Keep HUD and Tutorial for backward compatibility
+        // They now delegate to UIManager
         this.hud = new HUD(this);
         this.tutorial = new Tutorial(this);
     }
@@ -237,21 +246,12 @@ class Game {
                 this.isPaused = !this.isPaused;
             }
         });
-
-        // Replay button
-        const replayBtn = document.querySelector('.btn-replay');
-        if (replayBtn) {
-            replayBtn.addEventListener('click', () => this.replay());
-        }
     }
 
     _hideLoading() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.classList.add('fade-out');
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
+        // Delegate to UIManager
+        if (this.ui) {
+            this.ui.hideLoading();
         }
     }
 
@@ -330,9 +330,9 @@ class Game {
             this.effects.update(dt);
         }
 
-        // Update UI
-        if (this.hud) {
-            this.hud.update(dt);
+        // Update UI (centralized through UIManager)
+        if (this.ui) {
+            this.ui.update(dt);
         }
     }
 
@@ -351,10 +351,9 @@ class Game {
         this.state.phase = 'victory';
         this.input.exitPointerLock();
 
-        // Show victory screen
-        const victoryScreen = document.getElementById('victory-screen');
-        if (victoryScreen) {
-            victoryScreen.classList.remove('hidden');
+        // Show victory screen via UIManager
+        if (this.ui) {
+            this.ui.showVictory();
         }
 
         // Spawn celebration particles

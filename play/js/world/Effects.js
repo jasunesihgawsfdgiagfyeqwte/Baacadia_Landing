@@ -241,6 +241,7 @@ export class Effects {
             this.particles.push({
                 mesh: heart,
                 velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 1.5, // Random X velocity
                     2 + Math.random() * 1.5,     // Upward with variation
                     (Math.random() - 0.5) * 1.5  // Random Z velocity
                 ),

@@ -41,6 +41,11 @@ export class Cloudfen {
         // Pet reaction
         this.petCooldown = 0;
         this.happiness = 0;
+
+        // Animation
+        this.mixer = null;
+        this.animations = {};
+        this.currentAnimation = null;
     }
 
     async init(x, z) {
@@ -65,20 +70,60 @@ export class Cloudfen {
     }
 
     async _createMesh() {
-        // Try to load GLB model
         const loader = new THREE.GLTFLoader();
 
         try {
-            const gltf = await new Promise((resolve, reject) => {
+            // Load the idle animation GLB (base model with idle animation)
+            const idleGltf = await new Promise((resolve, reject) => {
                 loader.load(
-                    'assets/models/sheep.glb',
+                    'assets/models/Baacadia_Animation_Idle.glb',
                     resolve,
                     undefined,
                     reject
                 );
             });
 
-            this.model = gltf.scene;
+            this.model = idleGltf.scene;
+
+            // Check if model has visible meshes
+            let hasMeshes = false;
+            this.model.traverse((child) => {
+                if (child.isMesh) hasMeshes = true;
+            });
+
+            if (!hasMeshes) {
+                throw new Error('Animation GLB has no visible meshes');
+            }
+
+            // Create animation mixer
+            this.mixer = new THREE.AnimationMixer(this.model);
+
+            // Store idle animation
+            if (idleGltf.animations && idleGltf.animations.length > 0) {
+                this.animations.idle = this.mixer.clipAction(idleGltf.animations[0]);
+                console.log('Loaded idle animation');
+            }
+
+            // Try to load walk animation separately
+            try {
+                const walkGltf = await new Promise((resolve, reject) => {
+                    loader.load(
+                        'assets/models/Baacadia_Animation_Walk.glb',
+                        resolve,
+                        undefined,
+                        reject
+                    );
+                });
+
+                // Store walk animation - use the clip directly on our mixer
+                if (walkGltf.animations && walkGltf.animations.length > 0) {
+                    this.animations.walk = this.mixer.clipAction(walkGltf.animations[0]);
+                    console.log('Loaded walk animation');
+                }
+            } catch (walkErr) {
+                console.warn('Failed to load walk animation:', walkErr);
+                // Continue without walk animation - will use idle for everything
+            }
 
             // Create materials matching landing page style
             const gradientMap = this._createGradientTexture();
@@ -91,12 +136,11 @@ export class Cloudfen {
                 gradientMap: gradientMap
             });
 
-            // Apply materials based on mesh name (same logic as landing page)
+            // Apply materials based on mesh name
             this.model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
-                    // Check mesh name to determine material
                     const name = child.name.toLowerCase();
                     const isWhitePart = name.includes('wool');
                     child.material = isWhitePart ? woolMat : darkMat;
@@ -106,14 +150,53 @@ export class Cloudfen {
             // Set scale
             this.model.scale.setScalar(0.8);
 
-            // Fixed Y offset to place feet on ground (tested value)
+            // Fixed Y offset to place feet on ground
             this.modelYOffset = 0.9;
 
             this.mesh = this.model;
+
+            // Play idle animation by default
+            if (this.animations.idle) {
+                this.playAnimation('idle');
+            }
+
         } catch (e) {
-            // Fallback: create simple sheep mesh
-            this.mesh = this._createFallbackMesh();
-            this.modelYOffset = 0; // Fallback mesh is already designed to sit on Y=0
+            console.warn('Failed to load animated model, trying sheep.glb:', e);
+            // Try loading the original sheep.glb as fallback
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load('assets/models/sheep.glb', resolve, undefined, reject);
+                });
+                this.model = gltf.scene;
+
+                const gradientMap = this._createGradientTexture();
+                const woolMat = new THREE.MeshToonMaterial({
+                    color: 0xffffff,
+                    gradientMap: gradientMap
+                });
+                const darkMat = new THREE.MeshToonMaterial({
+                    color: 0x1a1a1a,
+                    gradientMap: gradientMap
+                });
+
+                this.model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        const name = child.name.toLowerCase();
+                        const isWhitePart = name.includes('wool');
+                        child.material = isWhitePart ? woolMat : darkMat;
+                    }
+                });
+
+                this.model.scale.setScalar(0.8);
+                this.modelYOffset = 0.9;
+                this.mesh = this.model;
+            } catch (e2) {
+                console.warn('Failed to load sheep.glb, using procedural fallback:', e2);
+                this.mesh = this._createFallbackMesh();
+                this.modelYOffset = 0;
+            }
         }
 
         // Set initial position
@@ -202,7 +285,38 @@ export class Cloudfen {
         return group;
     }
 
+    /**
+     * Play an animation with smooth crossfade transition
+     * @param {string} name - Animation name ('idle' or 'walk')
+     * @param {number} fadeTime - Crossfade duration in seconds
+     */
+    playAnimation(name, fadeTime = 0.2) {
+        if (!this.mixer || !this.animations[name]) return;
+        if (this.currentAnimation === name) return;
+
+        const newAction = this.animations[name];
+
+        if (this.currentAnimation && this.animations[this.currentAnimation]) {
+            // Crossfade from current animation
+            const currentAction = this.animations[this.currentAnimation];
+            newAction.reset();
+            newAction.play();
+            currentAction.crossFadeTo(newAction, fadeTime, true);
+        } else {
+            // No current animation, just play
+            newAction.reset();
+            newAction.play();
+        }
+
+        this.currentAnimation = name;
+    }
+
     update(dt) {
+        // Update animation mixer
+        if (this.mixer) {
+            this.mixer.update(dt);
+        }
+
         // Update cooldowns
         this.petCooldown = Math.max(0, this.petCooldown - dt);
         this.happiness = Math.max(0, this.happiness - dt * 0.1);
@@ -433,6 +547,13 @@ export class Cloudfen {
         // Bob animation
         this.bobPhase += dt * 5;
         const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+
+        // Switch between walk and idle animations based on movement
+        if (speed > 0.5) {
+            this.playAnimation('walk');
+        } else {
+            this.playAnimation('idle');
+        }
 
         if (speed > 0.5) {
             // Tilt in movement direction when moving

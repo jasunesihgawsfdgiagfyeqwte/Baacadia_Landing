@@ -880,6 +880,35 @@ footer {
     }
 }
 
+/* Short viewport height - hide scroll indicator to prevent compression */
+@media (max-height: 700px) {
+    .scroll-indicator {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        margin-top: 2rem;
+        animation: fadeIn 1s ease-out 2.5s forwards, floatMobile 2s ease-in-out infinite 2.5s;
+    }
+
+    .hero {
+        height: auto;
+        min-height: 100vh;
+    }
+}
+
+/* Very short viewport - hide scroll indicator entirely */
+@media (max-height: 550px) {
+    .scroll-indicator {
+        display: none;
+    }
+
+    .hero {
+        min-height: 0;
+        padding-bottom: 2rem;
+    }
+}
+
 /* Landscape mobile */
 @media (max-height: 500px) and (orientation: landscape) {
     .hero {

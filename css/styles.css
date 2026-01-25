@@ -59,6 +59,7 @@
 
 html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
 }
 
 body {
@@ -755,7 +756,15 @@ footer {
     .scroll-indicator {
         position: relative;
         bottom: auto;
+        left: auto;
+        transform: none;
         margin-top: 3rem;
+        animation: fadeIn 1s ease-out 2.5s forwards, floatMobile 2s ease-in-out infinite 2.5s;
+    }
+
+    @keyframes floatMobile {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(10px); }
     }
 
     /* Demo section mobile */

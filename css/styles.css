@@ -699,7 +699,7 @@ footer {
 
     /* CTA section mobile */
     .cta-section {
-        padding: var(--space-md) var(--space-sm) 10rem;
+        padding: var(--space-md) var(--space-sm) 4rem;
     }
 
     .cta-title {

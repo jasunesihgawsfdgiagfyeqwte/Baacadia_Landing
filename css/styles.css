@@ -425,8 +425,8 @@ body {
 }
 
 .demo-container {
-    max-width: 1000px;
-    width: 100%;
+    max-width: 1400px;
+    width: 90%;
     text-align: center;
 }
 
@@ -731,10 +731,13 @@ footer {
         padding: 0.4rem 0.8rem;
     }
 
-    /* 移动端hero区域调整，给羊留出更多空间 */
+    /* 移动端hero区域调整 - 减少空白 */
     .hero {
+        height: auto;
+        min-height: 70vh;
         justify-content: flex-start;
-        padding-top: 15vh;
+        padding-top: 8vh;
+        padding-bottom: 12vh;
     }
 
     .hero-title {
@@ -750,7 +753,9 @@ footer {
     }
 
     .scroll-indicator {
-        bottom: 2rem;
+        position: relative;
+        bottom: auto;
+        margin-top: 3rem;
     }
 
     /* Demo section mobile */
@@ -806,11 +811,17 @@ footer {
 
     /* 更小屏幕的进一步调整 */
     .hero {
-        padding-top: 12vh;
+        min-height: 60vh;
+        padding-top: 6vh;
+        padding-bottom: 8vh;
     }
 
     .hero-title {
         font-size: clamp(3rem, 14vw, 5rem);
+    }
+
+    .scroll-indicator {
+        margin-top: 2rem;
     }
 
     .btn {

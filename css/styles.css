@@ -541,6 +541,87 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────────
+   MODAL
+   ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(42, 36, 32, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, var(--sky-peach) 0%, var(--sky-pale) 100%);
+    border: 3px solid var(--ink);
+    padding: 2.5rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s var(--ease-out-expo);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0) scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--ink);
+}
+
+.modal-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--flora-dark);
+    margin-bottom: 1rem;
+}
+
+.modal-text {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+}
+
+.modal-text:last-of-type {
+    margin-bottom: 1.5rem;
+}
+
+.modal-btn {
+    min-width: 150px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
    FOOTER
    ───────────────────────────────────────────────────────────────── */
 footer {

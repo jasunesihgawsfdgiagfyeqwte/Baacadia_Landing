@@ -147,25 +147,25 @@ export class TouchSheepEffects {
 
             const heart = new THREE.Mesh(this.heartGeometry.clone(), material);
 
-            // Position with spread
+            // Position with spread - lower height so player can see from first person
             heart.position.copy(position);
-            heart.position.y += 1.2 + Math.random() * 0.3;
-            heart.position.x += (Math.random() - 0.5) * 0.8;
-            heart.position.z += (Math.random() - 0.5) * 0.8;
+            heart.position.y += 0.5 + Math.random() * 0.2; // Lower starting height (was 1.2)
+            heart.position.x += (Math.random() - 0.5) * 0.5;
+            heart.position.z += (Math.random() - 0.5) * 0.5;
 
             this.game.scene.add(heart);
 
             this.particles.push({
                 mesh: heart,
                 velocity: new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.8,
-                    1.5 + Math.random() * 1.0,
-                    (Math.random() - 0.5) * 0.8
+                    (Math.random() - 0.5) * 0.5,
+                    0.8 + Math.random() * 0.5, // Slower upward (was 1.5-2.5)
+                    (Math.random() - 0.5) * 0.5
                 ),
-                gravity: 2.0,
+                gravity: 1.5, // Less gravity for gentler arc
                 age: 0,
-                lifetime: 1.5 + Math.random() * 0.5,
-                startScale: 0.25 + Math.random() * 0.15,
+                lifetime: 0.8 + Math.random() * 0.3, // Shorter lifetime (was 1.5-2.0)
+                startScale: 0.2 + Math.random() * 0.1, // Slightly smaller
                 scaleAnimation: 'pop',
                 isBillboard: true,
             });
@@ -255,7 +255,7 @@ export class TouchSheepEffects {
 
             const sparkle = new THREE.Mesh(geometry, material);
             sparkle.position.copy(position);
-            sparkle.position.y += 1.0;
+            sparkle.position.y += 0.5; // Lower height (was 1.0)
 
             this.game.scene.add(sparkle);
 
@@ -263,13 +263,13 @@ export class TouchSheepEffects {
             this.particles.push({
                 mesh: sparkle,
                 velocity: new THREE.Vector3(
-                    Math.cos(angle) * 2,
-                    1.5 + Math.random(),
-                    Math.sin(angle) * 2
+                    Math.cos(angle) * 1.5, // Slightly smaller spread
+                    1.0 + Math.random() * 0.5, // Lower upward velocity
+                    Math.sin(angle) * 1.5
                 ),
-                gravity: 3.0,
+                gravity: 2.5,
                 age: 0,
-                lifetime: 1.0,
+                lifetime: 0.7, // Shorter lifetime
                 startScale: 1.0,
                 scaleAnimation: 'float',
                 isBillboard: false,

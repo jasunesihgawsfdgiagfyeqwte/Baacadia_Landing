@@ -46,7 +46,7 @@
             
             <div class="hero-cta">
                 <a href="#demo" class="btn btn-primary"><svg class="play-icon" width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><path d="M0 0v14l12-7z"/></svg> PLAY DEMO</a>
-                <a href="#" class="btn btn-secondary">+ WISHLIST</a>
+                <button type="button" class="btn btn-secondary btn-wishlist">+ WISHLIST</button>
             </div>
 
             <div class="scroll-indicator" aria-hidden="true">
@@ -144,7 +144,7 @@
                 <h2 class="cta-title reveal">READY TO LISTEN?</h2>
                 
                 <div class="cta-buttons reveal">
-                    <a href="#" class="btn btn-steam">+ WISHLIST ON STEAM</a>
+                    <button type="button" class="btn btn-steam btn-wishlist">+ WISHLIST ON STEAM</button>
                     <a href="#" class="btn btn-discord">JOIN OUR DISCORD</a>
                 </div>
             </div>
@@ -156,6 +156,17 @@
         <footer>
             USC Games · Advanced Games Project 2025-2026
         </footer>
+    </div>
+
+    <!-- Wishlist Modal -->
+    <div class="modal-overlay" id="wishlist-modal" aria-hidden="true">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+            <h3 class="modal-title">Coming Soon!</h3>
+            <p class="modal-text">Our Steam page is not active yet, but we're working hard to bring BAACADIA to you.</p>
+            <p class="modal-text">Follow us for updates when the wishlist becomes available!</p>
+            <button type="button" class="btn btn-primary modal-btn">Got it!</button>
+        </div>
     </div>
 
     <!-- Scripts -->

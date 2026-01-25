@@ -521,11 +521,59 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // WISHLIST MODAL
+    // ─────────────────────────────────────────────────────────────────
+    function initWishlistModal() {
+        const modal = document.getElementById('wishlist-modal');
+        if (!modal) return;
+
+        const wishlistBtns = document.querySelectorAll('.btn-wishlist');
+        const closeBtn = modal.querySelector('.modal-close');
+        const gotItBtn = modal.querySelector('.modal-btn');
+
+        function openModal() {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        // Open modal on wishlist button click
+        wishlistBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal();
+            });
+        });
+
+        // Close modal
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
+
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     // INITIALIZATION
     // ─────────────────────────────────────────────────────────────────
     function init() {
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
+
         if (!reducedMotion) {
             initScene();
         } else {
@@ -535,6 +583,7 @@
         }
 
         initScrollReveal();
+        initWishlistModal();
         console.log('BAACADIA Landing initialized | Mobile:', isMobile);
     }
 

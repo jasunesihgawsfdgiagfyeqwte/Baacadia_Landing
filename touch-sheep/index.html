@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Touch Sheep - Baacadia</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/touch-sheep.css">
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+        <!-- Logo -->
+        <div id="logo">
+            <span class="logo-text">Baacadia</span>
+        </div>
+
+        <!-- Crosshair -->
+        <div id="crosshair">
+            <div class="crosshair-dot"></div>
+        </div>
+
+        <!-- Start Prompt (before pointer lock) -->
+        <div id="start-prompt">
+            <div class="prompt-content">
+                <h2>Touch Sheep</h2>
+                <p>Click to start</p>
+                <div class="controls-preview">
+                    <span><strong>WASD</strong> Move</span>
+                    <span><strong>Mouse</strong> Look</span>
+                    <span><strong>Click/E</strong> Pet</span>
+                    <span><strong>Space</strong> Call</span>
+                    <span><strong>Shift</strong> Run</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interaction Prompt -->
+        <div id="interaction-prompt"></div>
+
+        <!-- Controls Hint (bottom left) -->
+        <div id="controls-hint">
+            <div class="hint-row">
+                <span class="hint-key">Space</span>
+                <span class="hint-label">Call sheep</span>
+            </div>
+            <div class="hint-row">
+                <span class="hint-key">E</span>
+                <span class="hint-label">Pet (when close)</span>
+            </div>
+        </div>
+
+        <!-- Wishlist CTA -->
+        <a id="wishlist-btn" href="https://store.steampowered.com/app/YOUR_APP_ID" target="_blank" rel="noopener">
+            <span class="wishlist-text">Wishlist on Steam</span>
+            <svg class="steam-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3l-.5 3H13v6.95c5.05-.5 9-4.76 9-9.95 0-5.52-4.48-10-10-10z"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-sheep">
+                <div class="sheep-body"></div>
+                <div class="sheep-head"></div>
+            </div>
+            <p class="loading-text">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Post-processing -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+
+    <!-- Game Module -->
+    <script type="module" src="js/TouchSheepGame.js"></script>
+</body>
+</html>

@@ -73,59 +73,19 @@ export class Cloudfen {
         const loader = new THREE.GLTFLoader();
 
         try {
-            // Load the idle animation GLB (base model with idle animation)
-            const idleGltf = await new Promise((resolve, reject) => {
+            // Use static sheep.glb for now (animation models have issues)
+            const gltf = await new Promise((resolve, reject) => {
                 loader.load(
-                    'assets/models/Baacadia_Animation_Idle.glb',
+                    'assets/models/sheep.glb',
                     resolve,
                     undefined,
                     reject
                 );
             });
 
-            this.model = idleGltf.scene;
+            this.model = gltf.scene;
 
-            // Check if model has visible meshes
-            let hasMeshes = false;
-            this.model.traverse((child) => {
-                if (child.isMesh) hasMeshes = true;
-            });
-
-            if (!hasMeshes) {
-                throw new Error('Animation GLB has no visible meshes');
-            }
-
-            // Create animation mixer
-            this.mixer = new THREE.AnimationMixer(this.model);
-
-            // Store idle animation
-            if (idleGltf.animations && idleGltf.animations.length > 0) {
-                this.animations.idle = this.mixer.clipAction(idleGltf.animations[0]);
-                console.log('Loaded idle animation');
-            }
-
-            // Try to load walk animation separately
-            try {
-                const walkGltf = await new Promise((resolve, reject) => {
-                    loader.load(
-                        'assets/models/Baacadia_Animation_Walk.glb',
-                        resolve,
-                        undefined,
-                        reject
-                    );
-                });
-
-                // Store walk animation - use the clip directly on our mixer
-                if (walkGltf.animations && walkGltf.animations.length > 0) {
-                    this.animations.walk = this.mixer.clipAction(walkGltf.animations[0]);
-                    console.log('Loaded walk animation');
-                }
-            } catch (walkErr) {
-                console.warn('Failed to load walk animation:', walkErr);
-                // Continue without walk animation - will use idle for everything
-            }
-
-            // Create materials matching landing page style
+            // Create materials
             const gradientMap = this._createGradientTexture();
             const woolMat = new THREE.MeshToonMaterial({
                 color: 0xffffff,
@@ -137,66 +97,32 @@ export class Cloudfen {
             });
 
             // Apply materials based on mesh name
+            // sheep.glb nodes: horn, leg, Group1, interior_body2, wool4, Cylinder0-2
             this.model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
                     const name = child.name.toLowerCase();
+                    
+                    // White parts: wool only
+                    // Dark parts: everything else (horn, leg, body/face, cylinders)
                     const isWhitePart = name.includes('wool');
                     child.material = isWhitePart ? woolMat : darkMat;
+                    
+                    console.log(`Mesh: ${name}, material: ${isWhitePart ? 'wool' : 'dark'}`);
                 }
             });
 
-            // Set scale
             this.model.scale.setScalar(0.8);
-
-            // Fixed Y offset to place feet on ground
             this.modelYOffset = 0.9;
-
             this.mesh = this.model;
-
-            // Play idle animation by default
-            if (this.animations.idle) {
-                this.playAnimation('idle');
-            }
+            
+            console.log('Loaded sheep.glb successfully');
 
         } catch (e) {
-            console.warn('Failed to load animated model, trying sheep.glb:', e);
-            // Try loading the original sheep.glb as fallback
-            try {
-                const gltf = await new Promise((resolve, reject) => {
-                    loader.load('assets/models/sheep.glb', resolve, undefined, reject);
-                });
-                this.model = gltf.scene;
-
-                const gradientMap = this._createGradientTexture();
-                const woolMat = new THREE.MeshToonMaterial({
-                    color: 0xffffff,
-                    gradientMap: gradientMap
-                });
-                const darkMat = new THREE.MeshToonMaterial({
-                    color: 0x1a1a1a,
-                    gradientMap: gradientMap
-                });
-
-                this.model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                        const name = child.name.toLowerCase();
-                        const isWhitePart = name.includes('wool');
-                        child.material = isWhitePart ? woolMat : darkMat;
-                    }
-                });
-
-                this.model.scale.setScalar(0.8);
-                this.modelYOffset = 0.9;
-                this.mesh = this.model;
-            } catch (e2) {
-                console.warn('Failed to load sheep.glb, using procedural fallback:', e2);
-                this.mesh = this._createFallbackMesh();
-                this.modelYOffset = 0;
-            }
+            console.warn('Failed to load sheep.glb, using fallback:', e);
+            this.mesh = this._createFallbackMesh();
+            this.modelYOffset = 0;
         }
 
         // Set initial position
@@ -312,10 +238,7 @@ export class Cloudfen {
     }
 
     update(dt) {
-        // Update animation mixer
-        if (this.mixer) {
-            this.mixer.update(dt);
-        }
+        // No animation mixer needed for static model
 
         // Update cooldowns
         this.petCooldown = Math.max(0, this.petCooldown - dt);
@@ -548,12 +471,7 @@ export class Cloudfen {
         this.bobPhase += dt * 5;
         const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
 
-        // Switch between walk and idle animations based on movement
-        if (speed > 0.5) {
-            this.playAnimation('walk');
-        } else {
-            this.playAnimation('idle');
-        }
+        // No animation switching for static model
 
         if (speed > 0.5) {
             // Tilt in movement direction when moving

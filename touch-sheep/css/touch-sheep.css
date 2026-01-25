@@ -1,0 +1,508 @@
+/**
+ * Touch Sheep - First Person Herding UI Styles
+ * Art Bible colors: peach #E8C4A8, sand #D4A574, pink #CB597D, teal #7EFFD0
+ */
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: #E8C4A8;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Game Container */
+#game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* UI Overlay */
+#ui-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Logo - Top Left */
+#logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.logo-text {
+    font-family: 'Caveat', cursive;
+    font-size: 28px;
+    font-weight: 600;
+    color: #4A4038;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+}
+
+/* Crosshair - Center */
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+.crosshair-dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(74, 64, 56, 0.6);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Start Prompt - Center */
+#start-prompt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(232, 196, 168, 0.3);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+
+.prompt-content {
+    text-align: center;
+    color: #4A4038;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    border: 1px solid rgba(74, 64, 56, 0.1);
+}
+
+.prompt-content h2 {
+    font-family: 'Caveat', cursive;
+    font-size: 48px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.prompt-content p {
+    font-size: 18px;
+    opacity: 0.8;
+    margin-bottom: 25px;
+}
+
+.controls-preview {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    font-size: 14px;
+}
+
+.controls-preview span {
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+}
+
+.controls-preview strong {
+    font-weight: 600;
+    color: #2A2420;
+}
+
+/* Interaction Prompt - Center Bottom */
+#interaction-prompt {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(74, 64, 56, 0.2);
+    border-radius: 8px;
+    font-size: 16px;
+    color: #4A4038;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+#interaction-prompt.visible {
+    opacity: 1;
+}
+
+#interaction-prompt.can-interact {
+    background: rgba(203, 89, 125, 0.2);
+    border-color: rgba(203, 89, 125, 0.4);
+}
+
+/* Controls Hint - Bottom Left */
+#controls-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+#controls-hint:hover {
+    opacity: 0.8;
+}
+
+.hint-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hint-key {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(74, 64, 56, 0.2);
+    border-radius: 4px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4A4038;
+    min-width: 50px;
+    text-align: center;
+}
+
+.hint-label {
+    font-size: 13px;
+    color: #4A4038;
+}
+
+/* Wishlist Button - Bottom Right */
+#wishlist-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(74, 64, 56, 0.2);
+    border-radius: 25px;
+    text-decoration: none;
+    color: #4A4038;
+    font-size: 14px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+#wishlist-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.03);
+}
+
+.wishlist-text {
+    font-weight: 500;
+}
+
+.steam-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #E8C4A8 0%, #D4A574 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+/* CSS Sheep for Loading */
+.loading-sheep {
+    position: relative;
+    width: 80px;
+    height: 65px;
+    animation: sheep-bounce 1s ease-in-out infinite;
+}
+
+.sheep-body {
+    position: absolute;
+    width: 65px;
+    height: 50px;
+    background: #ffffff;
+    border-radius: 50%;
+    bottom: 0;
+    left: 8px;
+    box-shadow:
+        inset -8px -8px 15px rgba(0, 0, 0, 0.05),
+        0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sheep-head {
+    position: absolute;
+    width: 26px;
+    height: 24px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    bottom: 20px;
+    right: 0;
+}
+
+.sheep-head::before,
+.sheep-head::after {
+    content: '';
+    position: absolute;
+    width: 7px;
+    height: 10px;
+    background: #1a1a1a;
+    border-radius: 50% 50% 0 0;
+    top: -6px;
+}
+
+.sheep-head::before {
+    left: 4px;
+    transform: rotate(-15deg);
+}
+
+.sheep-head::after {
+    right: 4px;
+    transform: rotate(15deg);
+}
+
+@keyframes sheep-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.loading-text {
+    font-family: 'Caveat', cursive;
+    font-size: 24px;
+    color: #4A4038;
+    opacity: 0.8;
+}
+
+/* Hidden utility */
+.hidden {
+    display: none !important;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    #logo {
+        top: 10px;
+        left: 10px;
+    }
+
+    .logo-text {
+        font-size: 18px;
+    }
+
+    .prompt-content {
+        padding: 20px 15px;
+        margin: 10px;
+        border-radius: 12px;
+    }
+
+    .prompt-content h2 {
+        font-size: 28px;
+        margin-bottom: 6px;
+    }
+
+    .prompt-content p {
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .controls-preview {
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .controls-preview span {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
+    #interaction-prompt {
+        bottom: 80px;
+        font-size: 12px;
+        padding: 8px 14px;
+    }
+
+    #controls-hint {
+        display: none;
+    }
+
+    #wishlist-btn {
+        bottom: 10px;
+        right: 10px;
+        padding: 8px 12px;
+        font-size: 11px;
+        border-radius: 20px;
+    }
+
+    .steam-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    .crosshair-dot {
+        width: 4px;
+        height: 4px;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .prompt-content {
+        padding: 15px 12px;
+        margin: 8px;
+    }
+
+    .prompt-content h2 {
+        font-size: 24px;
+    }
+
+    .controls-preview {
+        gap: 4px;
+    }
+
+    .controls-preview span {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    #wishlist-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) {
+    #logo {
+        top: 8px;
+        left: 8px;
+    }
+
+    .logo-text {
+        font-size: 16px;
+    }
+
+    .prompt-content {
+        padding: 12px 15px;
+        margin: 8px;
+    }
+
+    .prompt-content h2 {
+        font-size: 22px;
+        margin-bottom: 4px;
+    }
+
+    .prompt-content p {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .controls-preview {
+        gap: 5px;
+    }
+
+    .controls-preview span {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    #controls-hint {
+        display: none;
+    }
+
+    #wishlist-btn {
+        bottom: 8px;
+        right: 8px;
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+
+    #interaction-prompt {
+        bottom: 60px;
+        font-size: 11px;
+    }
+}
+
+/* Embedded in iframe - compact mode */
+@media (max-width: 600px), (max-height: 400px) {
+    #logo {
+        display: none;
+    }
+
+    #wishlist-btn {
+        display: none;
+    }
+
+    .prompt-content {
+        padding: 12px;
+        margin: 5px;
+    }
+
+    .prompt-content h2 {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+
+    .prompt-content p {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .controls-preview span {
+        font-size: 8px;
+        padding: 2px 5px;
+    }
+}

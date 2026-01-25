@@ -6,7 +6,8 @@
       "Bash(do node --check \"$f\")",
       "Bash(echo:*)",
       "Bash(done)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(ls:*)"
     ]
   }
 }

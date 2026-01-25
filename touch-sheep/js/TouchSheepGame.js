@@ -7,6 +7,7 @@ import { TouchSheepInput } from './TouchSheepInput.js';
 import { TouchSheepScene } from './TouchSheepScene.js';
 import { TouchSheepEffects } from './TouchSheepEffects.js';
 import { Cloudfen } from './TouchSheepCloudfen.js';
+import { MossBall } from './TouchSheepMossBall.js';
 
 class TouchSheepGame {
     constructor() {
@@ -16,6 +17,7 @@ class TouchSheepGame {
 
         // Game entities
         this.cloudfens = [];
+        this.mossBalls = [];
         this.activeSheep = null;
 
         // Systems
@@ -112,6 +114,7 @@ class TouchSheepGame {
             this._initInput();
             await this._initWorld();
             await this._initEntities();
+            await this._initMossBalls();
             this._bindEvents();
             this._hideLoading();
 
@@ -320,6 +323,26 @@ class TouchSheepGame {
             const cloudfen = new Cloudfen(this);
             await cloudfen.init(config.x, config.z, config.scale);
             this.cloudfens.push(cloudfen);
+        }
+    }
+
+    async _initMossBalls() {
+        // Spawn moss balls randomly across the meadow
+        const ballCount = 5 + Math.floor(Math.random() * 4); // 5-8 balls
+
+        for (let i = 0; i < ballCount; i++) {
+            // Random position within safe meadow area
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 5 + Math.random() * 20; // Between 5-25 units from center
+            const x = Math.cos(angle) * distance;
+            const z = Math.sin(angle) * distance;
+
+            // Random scale variation
+            const scale = 0.7 + Math.random() * 0.5; // 0.7 to 1.2
+
+            const mossBall = new MossBall(this);
+            await mossBall.init(x, z, scale);
+            this.mossBalls.push(mossBall);
         }
     }
 
@@ -823,6 +846,9 @@ class TouchSheepGame {
         // Collision with sheep
         this._handleSheepCollision();
 
+        // Collision with moss balls
+        this._handleMossBallCollision();
+
         // Bounds
         const bounds = 40;
         this.player.position.x = Math.max(-bounds, Math.min(bounds, this.player.position.x));
@@ -882,6 +908,78 @@ class TouchSheepGame {
                 sheep.velocity.x -= nx * 1.5;
                 sheep.velocity.z -= nz * 1.5;
                 sheep.woolBounceVel += 0.5; // Wool bounce feedback
+            }
+        }
+    }
+
+    _handleMossBallCollision() {
+        const playerRadius = 0.5;
+
+        for (const ball of this.mossBalls) {
+            if (!ball.mesh) continue;
+
+            const minDist = playerRadius + ball.radius;
+
+            const dx = this.player.position.x - ball.position.x;
+            const dz = this.player.position.z - ball.position.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+
+            if (dist < minDist && dist > 0) {
+                // Calculate push direction (from player to ball)
+                const nx = -dx / dist;
+                const nz = -dz / dist;
+
+                // Push force based on player speed
+                const playerSpeed = Math.sqrt(
+                    this.player.velocity.x ** 2 + this.player.velocity.z ** 2
+                );
+                const pushForce = Math.max(1.5, playerSpeed * 0.8);
+
+                // Push the ball
+                const pushDir = new THREE.Vector3(nx, 0, nz);
+                ball.push(pushDir, pushForce);
+
+                // Push player back slightly
+                const overlap = minDist - dist;
+                this.player.position.x += (dx / dist) * overlap * 0.3;
+                this.player.position.z += (dz / dist) * overlap * 0.3;
+            }
+        }
+
+        // Ball-to-ball collision
+        for (let i = 0; i < this.mossBalls.length; i++) {
+            for (let j = i + 1; j < this.mossBalls.length; j++) {
+                const ballA = this.mossBalls[i];
+                const ballB = this.mossBalls[j];
+
+                const dx = ballB.position.x - ballA.position.x;
+                const dz = ballB.position.z - ballA.position.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                const minDist = ballA.radius + ballB.radius;
+
+                if (dist < minDist && dist > 0) {
+                    // Separate balls
+                    const overlap = minDist - dist;
+                    const nx = dx / dist;
+                    const nz = dz / dist;
+
+                    ballA.position.x -= nx * overlap * 0.5;
+                    ballA.position.z -= nz * overlap * 0.5;
+                    ballB.position.x += nx * overlap * 0.5;
+                    ballB.position.z += nz * overlap * 0.5;
+
+                    // Exchange some velocity
+                    const relVelX = ballA.velocity.x - ballB.velocity.x;
+                    const relVelZ = ballA.velocity.z - ballB.velocity.z;
+                    const dotProduct = relVelX * nx + relVelZ * nz;
+
+                    if (dotProduct > 0) {
+                        ballA.velocity.x -= dotProduct * nx * 0.5;
+                        ballA.velocity.z -= dotProduct * nz * 0.5;
+                        ballB.velocity.x += dotProduct * nx * 0.5;
+                        ballB.velocity.z += dotProduct * nz * 0.5;
+                    }
+                }
             }
         }
     }
@@ -1144,6 +1242,11 @@ class TouchSheepGame {
 
         for (const cloudfen of this.cloudfens) {
             cloudfen.update(dt, playerInfo);
+        }
+
+        // Update moss balls
+        for (const mossBall of this.mossBalls) {
+            mossBall.update(dt);
         }
 
         // Sheep spawning system

@@ -92,10 +92,14 @@ class TouchSheepGame {
             lookActive: false,
             lookTouchId: null,
             lookLast: { x: 0, y: 0 },
+            // Look velocity for smooth inertia
+            lookVelocity: { x: 0, y: 0 },
             // Movement direction from joystick
             moveX: 0,
             moveZ: 0,
         };
+        // Touch look sensitivity (higher = more responsive)
+        this.touchLookSensitivity = 0.004;
 
         this._init();
     }
@@ -364,7 +368,6 @@ class TouchSheepGame {
         const joystickBase = document.getElementById('joystick-base');
         const joystickThumb = document.getElementById('joystick-thumb');
         const btnCall = document.getElementById('btn-call');
-        const btnRun = document.getElementById('btn-run');
 
         // Joystick touch events
         if (joystickZone) {
@@ -374,7 +377,7 @@ class TouchSheepGame {
             joystickZone.addEventListener('touchcancel', (e) => this._onJoystickEnd(e, joystickBase, joystickThumb), { passive: false });
         }
 
-        // Call button
+        // Call/Gather button
         if (btnCall) {
             btnCall.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -384,22 +387,8 @@ class TouchSheepGame {
             btnCall.addEventListener('touchend', () => {
                 btnCall.classList.remove('active');
             });
-        }
-
-        // Run button (hold to run)
-        if (btnRun) {
-            btnRun.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                btnRun.classList.add('active');
-                this.keys.run = true;
-            }, { passive: false });
-            btnRun.addEventListener('touchend', () => {
-                btnRun.classList.remove('active');
-                this.keys.run = false;
-            });
-            btnRun.addEventListener('touchcancel', () => {
-                btnRun.classList.remove('active');
-                this.keys.run = false;
+            btnCall.addEventListener('touchcancel', () => {
+                btnCall.classList.remove('active');
             });
         }
 
@@ -408,6 +397,15 @@ class TouchSheepGame {
         this.canvas.addEventListener('touchmove', this._onCanvasTouchMove.bind(this), { passive: false });
         this.canvas.addEventListener('touchend', this._onCanvasTouchEnd.bind(this), { passive: false });
         this.canvas.addEventListener('touchcancel', this._onCanvasTouchEnd.bind(this), { passive: false });
+
+        // Prevent double-tap zoom on the entire game
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (this._lastTouchEnd && now - this._lastTouchEnd < 300) {
+                e.preventDefault();
+            }
+            this._lastTouchEnd = now;
+        }, { passive: false });
 
         // Hide start prompt on touch devices
         const startPrompt = document.getElementById('start-prompt');
@@ -489,13 +487,14 @@ class TouchSheepGame {
     _onCanvasTouchStart(e) {
         // Check if this touch is for looking (not on UI elements)
         for (const touch of e.changedTouches) {
-            // Skip if this touch started on joystick area (left 40% of screen, bottom 40%)
             const x = touch.clientX / window.innerWidth;
             const y = touch.clientY / window.innerHeight;
 
-            // Left side bottom = joystick, right side bottom = buttons
-            const isJoystickArea = x < 0.35 && y > 0.6;
-            const isButtonArea = x > 0.7 && y > 0.6;
+            // More generous exclusion zones for controls
+            // Joystick: bottom-left corner
+            const isJoystickArea = x < 0.30 && y > 0.55;
+            // Button: bottom-right corner
+            const isButtonArea = x > 0.75 && y > 0.55;
 
             if (!isJoystickArea && !isButtonArea) {
                 // This is a look touch or tap-to-pet
@@ -506,6 +505,9 @@ class TouchSheepGame {
                     this.touch.lookLast.y = touch.clientY;
                     this.touch.lookStartTime = Date.now();
                     this.touch.lookStartPos = { x: touch.clientX, y: touch.clientY };
+                    // Reset velocity on new touch
+                    this.touch.lookVelocity.x = 0;
+                    this.touch.lookVelocity.y = 0;
                 }
             }
         }
@@ -519,15 +521,19 @@ class TouchSheepGame {
                 const dx = touch.clientX - this.touch.lookLast.x;
                 const dy = touch.clientY - this.touch.lookLast.y;
 
-                // Apply camera rotation (reduced sensitivity for touch)
-                const sensitivity = this.cameraConfig.sensitivity * 0.8;
-                this.player.rotation.yaw -= dx * sensitivity;
-                this.player.rotation.pitch -= dy * sensitivity;
+                // Apply camera rotation with better sensitivity
+                this.player.rotation.yaw -= dx * this.touchLookSensitivity;
+                this.player.rotation.pitch -= dy * this.touchLookSensitivity;
 
+                // Clamp pitch
                 this.player.rotation.pitch = Math.max(
                     -this.cameraConfig.pitchLimit,
                     Math.min(this.cameraConfig.pitchLimit, this.player.rotation.pitch)
                 );
+
+                // Store velocity for potential inertia
+                this.touch.lookVelocity.x = dx * this.touchLookSensitivity;
+                this.touch.lookVelocity.y = dy * this.touchLookSensitivity;
 
                 this.touch.lookLast.x = touch.clientX;
                 this.touch.lookLast.y = touch.clientY;
@@ -548,11 +554,40 @@ class TouchSheepGame {
                 // If it's a quick tap with minimal movement, try to pet sheep
                 if (duration < 300 && dist < 20) {
                     this._onTapToPet(touch.clientX, touch.clientY);
+                    // No inertia on tap
+                    this.touch.lookVelocity.x = 0;
+                    this.touch.lookVelocity.y = 0;
                 }
+                // Otherwise, keep some inertia for smooth feel (velocity already set)
 
                 this.touch.lookActive = false;
                 this.touch.lookTouchId = null;
                 break;
+            }
+        }
+    }
+
+    _updateTouchLookInertia() {
+        // Apply inertia when not actively touching
+        if (!this.touch.lookActive && this.isTouchDevice) {
+            const friction = 0.92; // How quickly inertia decays
+            const minVelocity = 0.0001;
+
+            if (Math.abs(this.touch.lookVelocity.x) > minVelocity ||
+                Math.abs(this.touch.lookVelocity.y) > minVelocity) {
+
+                this.player.rotation.yaw -= this.touch.lookVelocity.x;
+                this.player.rotation.pitch -= this.touch.lookVelocity.y;
+
+                // Clamp pitch
+                this.player.rotation.pitch = Math.max(
+                    -this.cameraConfig.pitchLimit,
+                    Math.min(this.cameraConfig.pitchLimit, this.player.rotation.pitch)
+                );
+
+                // Apply friction
+                this.touch.lookVelocity.x *= friction;
+                this.touch.lookVelocity.y *= friction;
             }
         }
     }
@@ -1094,6 +1129,7 @@ class TouchSheepGame {
 
     _update(dt) {
         this._updatePlayer(dt);
+        this._updateTouchLookInertia();
         this._updateInteraction();
 
         // Update sheep with player info
@@ -1101,7 +1137,9 @@ class TouchSheepGame {
             position: this.player.position.clone(),
             velocity: this.player.velocity.clone(),
             isRunning: this.keys.run,
-            isMoving: this.keys.forward || this.keys.backward || this.keys.left || this.keys.right,
+            isMoving: this.isTouchDevice
+                ? (Math.abs(this.touch.moveX) > 0.1 || Math.abs(this.touch.moveZ) > 0.1)
+                : (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right),
         };
 
         for (const cloudfen of this.cloudfens) {

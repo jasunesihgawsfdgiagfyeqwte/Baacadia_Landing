@@ -17,6 +17,8 @@ html, body {
     font-family: 'Crimson Pro', Georgia, serif;
     background: #E8C4A8;
     -webkit-tap-highlight-color: transparent;
+    /* Prevent double-tap zoom on mobile */
+    touch-action: manipulation;
 }
 
 /* Game Container */
@@ -634,6 +636,40 @@ html, body {
     line-height: 1;
 }
 
+.action-btn .btn-icon-svg {
+    width: 28px;
+    height: 28px;
+    stroke: #4A4038;
+    transition: stroke 0.15s ease, transform 0.15s ease;
+}
+
+.action-btn:active .btn-icon-svg,
+.action-btn.active .btn-icon-svg {
+    stroke: #CB597D;
+    transform: scale(1.1);
+}
+
+/* Call button specific styling */
+.action-btn.call-btn {
+    background: rgba(126, 255, 208, 0.15);
+    border-color: rgba(126, 255, 208, 0.4);
+}
+
+.action-btn.call-btn:active,
+.action-btn.call-btn.active {
+    background: rgba(126, 255, 208, 0.35);
+    border-color: rgba(126, 255, 208, 0.7);
+}
+
+.action-btn.call-btn .btn-icon-svg {
+    stroke: #4A4038;
+}
+
+.action-btn.call-btn:active .btn-icon-svg,
+.action-btn.call-btn.active .btn-icon-svg {
+    stroke: #2D8B6F;
+}
+
 .action-btn .btn-label {
     font-family: 'Crimson Pro', serif;
     font-size: 10px;
@@ -711,6 +747,11 @@ html, body {
         font-size: 20px;
     }
 
+    .action-btn .btn-icon-svg {
+        width: 24px;
+        height: 24px;
+    }
+
     .action-btn .btn-label {
         font-size: 9px;
     }
@@ -756,6 +797,11 @@ html, body {
         font-size: 18px;
     }
 
+    .action-btn .btn-icon-svg {
+        width: 22px;
+        height: 22px;
+    }
+
     .action-btn .btn-label {
         font-size: 8px;
     }
@@ -799,6 +845,11 @@ html, body {
 
     .action-btn .btn-icon {
         font-size: 16px;
+    }
+
+    .action-btn .btn-icon-svg {
+        width: 20px;
+        height: 20px;
     }
 
     .action-btn .btn-label {

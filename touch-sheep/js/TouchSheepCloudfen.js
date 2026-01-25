@@ -484,6 +484,7 @@ export class Cloudfen {
         }
 
         this._applyPhysics(dt);
+        this._handleMossBallCollision();
         this._updateVisuals(dt, playerPosition);
     }
 
@@ -1137,9 +1138,80 @@ export class Cloudfen {
         this.position.x = Math.max(-bounds, Math.min(bounds, this.position.x));
         this.position.z = Math.max(-bounds, Math.min(bounds, this.position.z));
 
+        // Rock collision
+        if (this.game.gameScene && this.game.gameScene.checkRockCollision) {
+            const rockCollision = this.game.gameScene.checkRockCollision(
+                this.position.x,
+                this.position.z,
+                sheepRadius
+            );
+
+            if (rockCollision) {
+                // Push sheep out of rock
+                this.position.x += rockCollision.normalX * rockCollision.overlap;
+                this.position.z += rockCollision.normalZ * rockCollision.overlap;
+
+                // Bounce velocity slightly
+                const dotProduct = this.velocity.x * rockCollision.normalX + this.velocity.z * rockCollision.normalZ;
+                if (dotProduct < 0) {
+                    this.velocity.x -= 1.5 * dotProduct * rockCollision.normalX;
+                    this.velocity.z -= 1.5 * dotProduct * rockCollision.normalZ;
+                }
+
+                // Wool bounce on impact
+                this.woolBounceVel += 0.4;
+            }
+        }
+
         // Update ground height after all position changes
         const groundY = this.game.gameScene ? this.game.gameScene.getGroundHeight(this.position.x, this.position.z) : 0;
         this.position.y = groundY;
+    }
+
+    _handleMossBallCollision() {
+        if (!this.game.mossBalls) return;
+
+        const sheepRadius = 0.9 * this.baseScale;
+
+        for (const ball of this.game.mossBalls) {
+            if (!ball.mesh) continue;
+
+            const dx = ball.position.x - this.position.x;
+            const dz = ball.position.z - this.position.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            const minDist = sheepRadius + ball.radius;
+
+            if (dist < minDist && dist > 0) {
+                // Calculate push direction (from sheep to ball)
+                const nx = dx / dist;
+                const nz = dz / dist;
+
+                // Push force based on sheep speed
+                const sheepSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+                const pushForce = Math.max(0.8, sheepSpeed * 0.6);
+
+                // Push the ball with upward kick for fun bouncy effect
+                const pushDir = new THREE.Vector3(nx, 0, nz);
+                ball.push(pushDir, pushForce, sheepSpeed > 1.5);
+
+                // Play impact sound with position for distance-based volume
+                if (this.game.audio && sheepSpeed > 0.5) {
+                    this.game.audio.playMossyImpact(pushForce, ball.position);
+                }
+
+                // Push sheep back slightly
+                const overlap = minDist - dist;
+                this.position.x -= nx * overlap * 0.3;
+                this.position.z -= nz * overlap * 0.3;
+
+                // Wool bounce feedback
+                this.woolBounceVel += 0.4;
+
+                // Add some velocity bounce to sheep
+                this.velocity.x -= nx * 0.5;
+                this.velocity.z -= nz * 0.5;
+            }
+        }
     }
 
     _updateVisuals(dt, playerPosition) {
@@ -1586,6 +1658,11 @@ export class Cloudfen {
 
         if (this.game.effects) {
             this.game.effects.spawnHearts(this.mesh.position, 1);
+        }
+
+        // Play happy bleat sound with sheep position for distance-based volume
+        if (this.game.audio && Math.random() < 0.6) {
+            this.game.audio.playSheepBleat(this.position);
         }
 
         this.mood.contentment = Math.min(1, this.mood.contentment + 0.2);

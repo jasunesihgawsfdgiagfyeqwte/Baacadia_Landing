@@ -8,6 +8,7 @@ import { TouchSheepScene } from './TouchSheepScene.js';
 import { TouchSheepEffects } from './TouchSheepEffects.js';
 import { Cloudfen } from './TouchSheepCloudfen.js';
 import { MossBall } from './TouchSheepMossBall.js';
+import { TouchSheepAudio } from './TouchSheepAudio.js';
 
 class TouchSheepGame {
     constructor() {
@@ -24,6 +25,7 @@ class TouchSheepGame {
         this.input = null;
         this.gameScene = null;
         this.effects = null;
+        this.audio = null;
 
         // Three.js core
         this.scene = null;
@@ -300,42 +302,99 @@ class TouchSheepGame {
 
         this.effects = new TouchSheepEffects(this);
         await this.effects.init();
+
+        this.audio = new TouchSheepAudio(this);
+        await this.audio.init();
     }
 
     async _initEntities() {
-        // Spawn sheep spread out across the meadow
-        const sheepConfigs = [
-            // More spread out distribution
-            { x: -5, z: -3, scale: 1.0 },
-            { x: 4, z: -5, scale: 0.95 },
-            { x: -8, z: 2, scale: 0.98 },
-            { x: 6, z: 4, scale: 0.92 },
-            { x: -3, z: 8, scale: 0.9 },
-            { x: 10, z: -2, scale: 0.96 },
-            // Far scattered
-            { x: -12, z: -6, scale: 0.88 },
-            { x: 8, z: 10, scale: 0.85 },
-            { x: -6, z: -10, scale: 0.9 },
-            { x: 15, z: 5, scale: 0.87 },
-        ];
+        // Spawn sheep spread out across the entire meadow (not just center)
+        const initialSheepCount = 8 + Math.floor(Math.random() * 3); // 8-10 sheep
+        const minDistBetweenSheep = 5;
+        const spawnedPositions = [];
 
-        for (const config of sheepConfigs) {
+        for (let i = 0; i < initialSheepCount; i++) {
+            let x, z;
+            let attempts = 0;
+
+            // Find a position not too close to other sheep or player start
+            do {
+                // Spread across entire safe map area (radius 5-28 from center)
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 5 + Math.random() * 23; // Between 5-28 units from center
+                x = Math.cos(angle) * distance;
+                z = Math.sin(angle) * distance;
+
+                // Check distance from player start (0, 0, 10)
+                const distFromPlayer = Math.sqrt(x * x + (z - 10) * (z - 10));
+                if (distFromPlayer < 8) {
+                    attempts++;
+                    continue;
+                }
+
+                // Check distance from other sheep
+                let tooClose = false;
+                for (const pos of spawnedPositions) {
+                    const dist = Math.sqrt((x - pos.x) ** 2 + (z - pos.z) ** 2);
+                    if (dist < minDistBetweenSheep) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+
+                if (!tooClose) break;
+                attempts++;
+            } while (attempts < 15);
+
+            spawnedPositions.push({ x, z });
+
+            const scale = 0.85 + Math.random() * 0.15; // 0.85-1.0
             const cloudfen = new Cloudfen(this);
-            await cloudfen.init(config.x, config.z, config.scale);
+            await cloudfen.init(x, z, scale);
             this.cloudfens.push(cloudfen);
         }
     }
 
     async _initMossBalls() {
-        // Spawn moss balls randomly across the meadow
-        const ballCount = 5 + Math.floor(Math.random() * 4); // 5-8 balls
+        // Spawn moss balls spread across the entire meadow (not just center)
+        const ballCount = 6 + Math.floor(Math.random() * 4); // 6-9 balls
+        const minDistBetweenBalls = 4;
+        const spawnedPositions = [];
 
         for (let i = 0; i < ballCount; i++) {
-            // Random position within safe meadow area
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 5 + Math.random() * 20; // Between 5-25 units from center
-            const x = Math.cos(angle) * distance;
-            const z = Math.sin(angle) * distance;
+            let x, z;
+            let attempts = 0;
+
+            // Find a position not too close to other balls or player start
+            do {
+                // Spread across entire safe map area (radius 3-30 from center)
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 3 + Math.random() * 27; // Between 3-30 units from center
+                x = Math.cos(angle) * distance;
+                z = Math.sin(angle) * distance;
+
+                // Check distance from player start (0, 0, 10)
+                const distFromPlayer = Math.sqrt(x * x + (z - 10) * (z - 10));
+                if (distFromPlayer < 5) {
+                    attempts++;
+                    continue;
+                }
+
+                // Check distance from other balls
+                let tooClose = false;
+                for (const pos of spawnedPositions) {
+                    const dist = Math.sqrt((x - pos.x) ** 2 + (z - pos.z) ** 2);
+                    if (dist < minDistBetweenBalls) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+
+                if (!tooClose) break;
+                attempts++;
+            } while (attempts < 15);
+
+            spawnedPositions.push({ x, z });
 
             // Random scale variation
             const scale = 0.7 + Math.random() * 0.5; // 0.7 to 1.2
@@ -801,6 +860,14 @@ class TouchSheepGame {
 
         for (const cloudfen of this.cloudfens) {
             cloudfen.onCalled(callOrigin);
+
+            // Random chance for sheep to baa in response (with position for distance-based volume)
+            if (Math.random() < 0.3 && this.audio) {
+                const sheepPos = cloudfen.position.clone();
+                setTimeout(() => {
+                    this.audio.playSheepBaa(sheepPos);
+                }, 200 + Math.random() * 800);
+            }
         }
     }
 
@@ -848,6 +915,9 @@ class TouchSheepGame {
 
         // Collision with moss balls
         this._handleMossBallCollision();
+
+        // Collision with rocks
+        this._handleRockCollision();
 
         // Bounds
         const bounds = 40;
@@ -935,9 +1005,14 @@ class TouchSheepGame {
                 );
                 const pushForce = Math.max(1.5, playerSpeed * 0.8);
 
-                // Push the ball
+                // Push the ball (with upward kick if moving fast)
                 const pushDir = new THREE.Vector3(nx, 0, nz);
-                ball.push(pushDir, pushForce);
+                ball.push(pushDir, pushForce, playerSpeed > 2.0);
+
+                // Play impact sound with position for distance-based volume
+                if (this.audio && playerSpeed > 0.5) {
+                    this.audio.playMossyImpact(pushForce, ball.position);
+                }
 
                 // Push player back slightly
                 const overlap = minDist - dist;
@@ -979,6 +1054,45 @@ class TouchSheepGame {
                         ballB.velocity.x += dotProduct * nx * 0.5;
                         ballB.velocity.z += dotProduct * nz * 0.5;
                     }
+                }
+            }
+        }
+    }
+
+    _handleRockCollision() {
+        if (!this.gameScene) return;
+
+        const playerRadius = 0.5;
+        const collision = this.gameScene.checkRockCollision(
+            this.player.position.x,
+            this.player.position.z,
+            playerRadius
+        );
+
+        if (collision) {
+            // Push player out of rock
+            this.player.position.x += collision.normalX * collision.overlap;
+            this.player.position.z += collision.normalZ * collision.overlap;
+        }
+
+        // Also check moss balls against rocks
+        for (const ball of this.mossBalls) {
+            const ballCollision = this.gameScene.checkRockCollision(
+                ball.position.x,
+                ball.position.z,
+                ball.radius
+            );
+
+            if (ballCollision) {
+                // Push ball out of rock
+                ball.position.x += ballCollision.normalX * ballCollision.overlap;
+                ball.position.z += ballCollision.normalZ * ballCollision.overlap;
+
+                // Bounce velocity
+                const dotProduct = ball.velocity.x * ballCollision.normalX + ball.velocity.z * ballCollision.normalZ;
+                if (dotProduct < 0) {
+                    ball.velocity.x -= 2 * dotProduct * ballCollision.normalX * 0.6;
+                    ball.velocity.z -= 2 * dotProduct * ballCollision.normalZ * 0.6;
                 }
             }
         }
@@ -1153,16 +1267,16 @@ class TouchSheepGame {
 
         try {
             // Find a spawn position away from player and other sheep
+            // Spawn across entire map, not just near center
             let spawnX, spawnZ;
             let attempts = 0;
-            const minDistFromPlayer = 15;
-            const minDistFromSheep = 4;
+            const minDistFromPlayer = 18; // Far enough from player to not be seen spawning
+            const minDistFromSheep = 5;
 
             do {
-                // Spawn within safe meadow area (not at edges where terrain drops off)
-                const safeRadius = 20; // Stay within safe ground
+                // Spawn across entire safe meadow area (radius 8-30 from center)
                 const angle = Math.random() * Math.PI * 2;
-                const distance = 8 + Math.random() * (safeRadius - 8); // Between 8-20 units from center
+                const distance = 8 + Math.random() * 22; // Between 8-30 units from center
                 spawnX = Math.cos(angle) * distance;
                 spawnZ = Math.sin(angle) * distance;
 
@@ -1192,9 +1306,9 @@ class TouchSheepGame {
 
                 if (!tooClose) break;
                 attempts++;
-            } while (attempts < 10);
+            } while (attempts < 15);
 
-            // Spawn the new sheep using the same method as initial sheep
+            // Spawn the new sheep
             const scale = 0.85 + Math.random() * 0.15;
             const cloudfen = new Cloudfen(this);
             await cloudfen.init(spawnX, spawnZ, scale);
@@ -1254,6 +1368,11 @@ class TouchSheepGame {
 
         if (this.effects) {
             this.effects.update(dt);
+        }
+
+        // Update audio with player info
+        if (this.audio) {
+            this.audio.update(dt, playerInfo);
         }
 
         if (this.gameScene) {

@@ -15,6 +15,9 @@ export class TouchSheepScene {
         this.ground = null;
         this.groundVertices = null;
         this.groundSize = 100;
+
+        // Rock colliders for physics
+        this.rockColliders = [];
     }
 
     async init() {
@@ -170,13 +173,7 @@ export class TouchSheepScene {
     }
 
     _createRocks() {
-        const rockMaterial = new THREE.MeshStandardMaterial({
-            color: 0x7A5153,
-            roughness: 0.95,
-            metalness: 0.1,
-        });
-
-        // Large rocks
+        // Large rocks with colliders
         const rockPositions = [
             { x: -15, z: 10, scale: 2.5 },
             { x: 20, z: -12, scale: 2 },
@@ -191,12 +188,19 @@ export class TouchSheepScene {
         for (const pos of rockPositions) {
             const rock = this._createRock(pos.scale);
             const y = this.getGroundHeight(pos.x, pos.z);
-            rock.position.set(pos.x, y, pos.z);
+            rock.position.set(pos.x, y - 0.3 * pos.scale, pos.z);
             rock.rotation.y = Math.random() * Math.PI * 2;
             this.game.scene.add(rock);
+
+            // Add collider for large rocks
+            this.rockColliders.push({
+                x: pos.x,
+                z: pos.z,
+                radius: pos.scale * 0.9, // Collision radius
+            });
         }
 
-        // Small stones
+        // Small stones (no collision - too small)
         for (let i = 0; i < 40; i++) {
             const stone = this._createStone();
             const x = (Math.random() - 0.5) * 70;
@@ -209,28 +213,114 @@ export class TouchSheepScene {
     }
 
     _createRock(scale) {
-        const geometry = new THREE.DodecahedronGeometry(1, 1);
+        const group = new THREE.Group();
 
-        const vertices = geometry.attributes.position.array;
-        for (let i = 0; i < vertices.length; i += 3) {
-            vertices[i] *= 0.7 + Math.random() * 0.6;
-            vertices[i + 1] *= 0.5 + Math.random() * 0.5;
-            vertices[i + 2] *= 0.7 + Math.random() * 0.6;
+        // Use icosahedron with lower detail for cleaner look
+        const geometry = new THREE.IcosahedronGeometry(1, 0);
+
+        // Create a seeded random for consistent deformation per rock
+        const seed = Math.random() * 1000;
+        const seededRandom = (offset) => {
+            const x = Math.sin(seed + offset) * 10000;
+            return x - Math.floor(x);
+        };
+
+        // Gently deform vertices for organic look
+        const posAttr = geometry.attributes.position;
+        const vertexCount = posAttr.count;
+
+        for (let i = 0; i < vertexCount; i++) {
+            const x = posAttr.getX(i);
+            const y = posAttr.getY(i);
+            const z = posAttr.getZ(i);
+
+            // Flatten vertically and add slight variation
+            const flattenY = 0.6;
+            const variation = 0.15;
+
+            posAttr.setXYZ(
+                i,
+                x * (1 + (seededRandom(i) - 0.5) * variation),
+                y * flattenY * (1 + (seededRandom(i + 100) - 0.5) * variation * 0.5),
+                z * (1 + (seededRandom(i + 200) - 0.5) * variation)
+            );
         }
+
         geometry.computeVertexNormals();
 
         const material = new THREE.MeshStandardMaterial({
             color: 0x7A5153,
             roughness: 0.95,
             metalness: 0.1,
+            flatShading: true, // Stylized look
         });
 
         const rock = new THREE.Mesh(geometry, material);
-        rock.scale.setScalar(scale);
         rock.castShadow = true;
         rock.receiveShadow = true;
+        group.add(rock);
 
-        return rock;
+        // Add some smaller accent rocks around base
+        const accentCount = 2 + Math.floor(seededRandom(500) * 3);
+        for (let i = 0; i < accentCount; i++) {
+            const accentGeo = new THREE.IcosahedronGeometry(0.3, 0);
+
+            // Deform accent rocks too
+            const accentPos = accentGeo.attributes.position;
+            for (let j = 0; j < accentPos.count; j++) {
+                accentPos.setY(j, accentPos.getY(j) * 0.5);
+            }
+            accentGeo.computeVertexNormals();
+
+            const accentMat = new THREE.MeshStandardMaterial({
+                color: 0x6A4548,
+                roughness: 0.9,
+                flatShading: true,
+            });
+
+            const accent = new THREE.Mesh(accentGeo, accentMat);
+            const angle = (i / accentCount) * Math.PI * 2 + seededRandom(i + 300) * 0.5;
+            const dist = 0.7 + seededRandom(i + 400) * 0.4;
+            accent.position.set(
+                Math.cos(angle) * dist,
+                -0.3,
+                Math.sin(angle) * dist
+            );
+            accent.rotation.y = seededRandom(i + 600) * Math.PI * 2;
+            accent.castShadow = true;
+            group.add(accent);
+        }
+
+        group.scale.setScalar(scale);
+
+        return group;
+    }
+
+    /**
+     * Check collision with rocks
+     * @param {number} x - World X position
+     * @param {number} z - World Z position
+     * @param {number} radius - Collision radius of the object
+     * @returns {Object|null} Collision info or null if no collision
+     */
+    checkRockCollision(x, z, radius = 0.5) {
+        for (const rock of this.rockColliders) {
+            const dx = x - rock.x;
+            const dz = z - rock.z;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            const minDist = rock.radius + radius;
+
+            if (dist < minDist) {
+                return {
+                    rock: rock,
+                    distance: dist,
+                    overlap: minDist - dist,
+                    normalX: dist > 0 ? dx / dist : 1,
+                    normalZ: dist > 0 ? dz / dist : 0,
+                };
+            }
+        }
+        return null;
     }
 
     _createStone() {

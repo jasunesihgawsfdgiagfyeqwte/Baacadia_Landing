@@ -12,13 +12,19 @@ export class MossBall {
         this.angularVelocity = new THREE.Vector3();
 
         // Physics settings - easier to push
-        this.mass = 2.5; // Lighter than original (was 5)
+        this.mass = 2.0; // Light for easy pushing
         this.friction = 0.94; // Slightly less friction for smoother rolling
         this.radius = 0.6; // Slightly smaller
-        this.pushMultiplier = 2.5; // How responsive to pushing
+        this.pushMultiplier = 3.0; // How responsive to pushing
+
+        // Gravity settings
+        this.gravity = 15.0; // Gravity strength
+        this.groundY = 0; // Ground level (will be updated based on terrain)
+        this.bounciness = 0.3; // How bouncy when hitting ground
 
         // State
         this.isMoving = false;
+        this.isGrounded = true;
 
         // Visual
         this.mesh = null;
@@ -118,21 +124,57 @@ export class MossBall {
     }
 
     _applyPhysics(dt) {
+        // Get ground height at current position
+        if (this.game.gameScene) {
+            this.groundY = this.game.gameScene.getGroundHeight(this.position.x, this.position.z);
+        }
+
+        // Apply gravity
+        if (!this.isGrounded) {
+            this.velocity.y -= this.gravity * dt;
+        }
+
         // Apply velocity
         this.position.add(this.velocity.clone().multiplyScalar(dt));
 
-        // Ground constraint
-        this.position.y = this.radius;
+        // Ground collision
+        const groundLevel = this.groundY + this.radius;
+        if (this.position.y <= groundLevel) {
+            this.position.y = groundLevel;
 
-        // Friction
-        this.velocity.multiplyScalar(this.friction);
+            // Bounce if falling fast enough
+            if (this.velocity.y < -1) {
+                this.velocity.y *= -this.bounciness;
+                // Play sound on significant bounce
+                if (this.velocity.y > 0.5 && this.game.audio) {
+                    this.game.audio.playMossyImpact(Math.abs(this.velocity.y) * 0.5);
+                }
+            } else {
+                this.velocity.y = 0;
+            }
+            this.isGrounded = true;
+        } else {
+            this.isGrounded = false;
+        }
+
+        // Horizontal friction (only when grounded)
+        if (this.isGrounded) {
+            this.velocity.x *= this.friction;
+            this.velocity.z *= this.friction;
+        } else {
+            // Less friction in air
+            this.velocity.x *= 0.99;
+            this.velocity.z *= 0.99;
+        }
 
         // Check if still moving
-        this.isMoving = this.velocity.length() > 0.05;
+        const horizontalSpeed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
+        this.isMoving = horizontalSpeed > 0.05 || Math.abs(this.velocity.y) > 0.1;
 
-        // Stop completely if very slow
-        if (this.velocity.length() < 0.02) {
-            this.velocity.set(0, 0, 0);
+        // Stop completely if very slow and grounded
+        if (this.isGrounded && horizontalSpeed < 0.02) {
+            this.velocity.x = 0;
+            this.velocity.z = 0;
         }
 
         // Bounds
@@ -175,15 +217,21 @@ export class MossBall {
 
     /**
      * Push the moss ball in a direction with force
+     * @param {THREE.Vector3} direction - Push direction (normalized)
+     * @param {number} force - Push force
+     * @param {boolean} addUpward - Add upward component for a "kick" effect
      */
-    push(direction, force) {
+    push(direction, force, addUpward = false) {
         // Apply push with multiplier for easier pushing
-        this.velocity.add(direction.clone().multiplyScalar(force * this.pushMultiplier));
+        const pushVel = direction.clone().multiplyScalar(force * this.pushMultiplier);
 
-        // Visual feedback - spawn small effect
-        if (this.game.effects && this.game.effects.spawnImpact) {
-            this.game.effects.spawnImpact(this.position, 0x5D7A4A);
+        // Add upward kick if requested (makes it more fun)
+        if (addUpward && this.isGrounded) {
+            pushVel.y = force * 0.8;
+            this.isGrounded = false;
         }
+
+        this.velocity.add(pushVel);
     }
 
     /**

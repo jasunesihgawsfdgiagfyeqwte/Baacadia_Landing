@@ -506,3 +506,308 @@ html, body {
         padding: 2px 5px;
     }
 }
+
+/* ============================================
+   MOBILE TOUCH CONTROLS
+   ============================================ */
+
+/* Hide mobile controls by default (shown via JS on touch devices) */
+#mobile-controls {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 150;
+}
+
+/* Show on touch devices */
+.touch-device #mobile-controls {
+    display: block;
+}
+
+/* Hide desktop-only elements on touch devices */
+.touch-device #controls-hint {
+    display: none !important;
+}
+
+.touch-device #crosshair {
+    display: none !important;
+}
+
+.touch-device #start-prompt .controls-preview {
+    display: none;
+}
+
+.touch-device #start-prompt .prompt-content p {
+    margin-bottom: 0;
+}
+
+/* Virtual Joystick Zone */
+#joystick-zone {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 140px;
+    height: 140px;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#joystick-base {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(74, 64, 56, 0.25);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#joystick-base.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(74, 64, 56, 0.4);
+}
+
+#joystick-thumb {
+    width: 50px;
+    height: 50px;
+    background: rgba(74, 64, 56, 0.4);
+    border: 2px solid rgba(74, 64, 56, 0.5);
+    border-radius: 50%;
+    transition: transform 0.05s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+#joystick-base.active #joystick-thumb {
+    background: rgba(203, 89, 125, 0.5);
+    border-color: rgba(203, 89, 125, 0.7);
+}
+
+/* Action Buttons Zone */
+#action-buttons {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    pointer-events: auto;
+}
+
+.action-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(74, 64, 56, 0.25);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #4A4038;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: all 0.15s ease;
+}
+
+.action-btn:active,
+.action-btn.active {
+    background: rgba(203, 89, 125, 0.3);
+    border-color: rgba(203, 89, 125, 0.5);
+    transform: scale(0.95);
+}
+
+.action-btn .btn-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.action-btn .btn-label {
+    font-family: 'Crimson Pro', serif;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Pet Hint */
+#mobile-pet-hint {
+    position: absolute;
+    bottom: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(74, 64, 56, 0.2);
+    border-radius: 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    color: #4A4038;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+#mobile-pet-hint.visible {
+    opacity: 1;
+}
+
+/* Look Zone (right side of screen for camera rotation) */
+#look-zone {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) and (pointer: coarse) {
+    #joystick-zone {
+        bottom: 15px;
+        left: 15px;
+        width: 130px;
+        height: 130px;
+    }
+
+    #joystick-base {
+        width: 110px;
+        height: 110px;
+    }
+
+    #joystick-thumb {
+        width: 45px;
+        height: 45px;
+    }
+
+    #action-buttons {
+        bottom: 15px;
+        right: 15px;
+        gap: 12px;
+    }
+
+    .action-btn {
+        width: 65px;
+        height: 65px;
+    }
+
+    .action-btn .btn-icon {
+        font-size: 20px;
+    }
+
+    .action-btn .btn-label {
+        font-size: 9px;
+    }
+
+    #mobile-pet-hint {
+        bottom: 160px;
+        font-size: 12px;
+        padding: 6px 14px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) and (pointer: coarse) {
+    #joystick-zone {
+        bottom: 10px;
+        left: 10px;
+        width: 110px;
+        height: 110px;
+    }
+
+    #joystick-base {
+        width: 95px;
+        height: 95px;
+    }
+
+    #joystick-thumb {
+        width: 40px;
+        height: 40px;
+    }
+
+    #action-buttons {
+        bottom: 10px;
+        right: 10px;
+        gap: 10px;
+    }
+
+    .action-btn {
+        width: 55px;
+        height: 55px;
+    }
+
+    .action-btn .btn-icon {
+        font-size: 18px;
+    }
+
+    .action-btn .btn-label {
+        font-size: 8px;
+    }
+
+    #mobile-pet-hint {
+        bottom: 130px;
+        font-size: 11px;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 450px) and (pointer: coarse) {
+    #joystick-zone {
+        bottom: 10px;
+        left: 10px;
+        width: 100px;
+        height: 100px;
+    }
+
+    #joystick-base {
+        width: 85px;
+        height: 85px;
+    }
+
+    #joystick-thumb {
+        width: 35px;
+        height: 35px;
+    }
+
+    #action-buttons {
+        bottom: 10px;
+        right: 10px;
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .action-btn {
+        width: 50px;
+        height: 50px;
+    }
+
+    .action-btn .btn-icon {
+        font-size: 16px;
+    }
+
+    .action-btn .btn-label {
+        display: none;
+    }
+
+    #mobile-pet-hint {
+        bottom: auto;
+        top: 10px;
+        font-size: 11px;
+    }
+}

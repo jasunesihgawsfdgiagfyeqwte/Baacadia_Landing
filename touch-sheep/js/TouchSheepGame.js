@@ -80,11 +80,29 @@ class TouchSheepGame {
             run: false,
         };
 
+        // Mobile touch state
+        this.isTouchDevice = false;
+        this.touch = {
+            // Joystick
+            joystickActive: false,
+            joystickTouchId: null,
+            joystickStart: { x: 0, y: 0 },
+            joystickDelta: { x: 0, y: 0 },
+            // Camera look
+            lookActive: false,
+            lookTouchId: null,
+            lookLast: { x: 0, y: 0 },
+            // Movement direction from joystick
+            moveX: 0,
+            moveZ: 0,
+        };
+
         this._init();
     }
 
     async _init() {
         try {
+            this._detectTouchDevice();
             this._initThree();
             this._initPostProcessing();
             this._initInput();
@@ -97,6 +115,21 @@ class TouchSheepGame {
             this._gameLoop();
         } catch (error) {
             console.error('Game initialization failed:', error);
+        }
+    }
+
+    _detectTouchDevice() {
+        // Detect if this is a touch device
+        this.isTouchDevice = (
+            'ontouchstart' in window ||
+            navigator.maxTouchPoints > 0 ||
+            window.matchMedia('(pointer: coarse)').matches
+        );
+
+        if (this.isTouchDevice) {
+            document.body.classList.add('touch-device');
+            // On touch devices, we skip pointer lock and use touch controls
+            this.isLocked = true; // Pretend we're "locked" to enable gameplay
         }
     }
 
@@ -287,37 +320,307 @@ class TouchSheepGame {
     }
 
     _bindEvents() {
-        // Pointer lock on click
-        this.canvas.addEventListener('click', () => {
-            if (!this.isLocked) {
-                this.canvas.requestPointerLock();
-            }
-        });
+        if (this.isTouchDevice) {
+            // Touch device: bind touch controls
+            this._bindTouchEvents();
+        } else {
+            // Desktop: use pointer lock
+            this.canvas.addEventListener('click', () => {
+                if (!this.isLocked) {
+                    this.canvas.requestPointerLock();
+                }
+            });
 
-        document.addEventListener('pointerlockchange', () => {
-            this.isLocked = document.pointerLockElement === this.canvas;
-            this._updateUI();
+            document.addEventListener('pointerlockchange', () => {
+                this.isLocked = document.pointerLockElement === this.canvas;
+                this._updateUI();
 
-            // Reset keys when losing lock to prevent stuck keys
-            if (!this.isLocked) {
-                this.keys.forward = false;
-                this.keys.backward = false;
-                this.keys.left = false;
-                this.keys.right = false;
+                // Reset keys when losing lock to prevent stuck keys
+                if (!this.isLocked) {
+                    this.keys.forward = false;
+                    this.keys.backward = false;
+                    this.keys.left = false;
+                    this.keys.right = false;
+                    this.keys.run = false;
+                }
+            });
+
+            // Mouse look
+            document.addEventListener('mousemove', this._onMouseMove.bind(this));
+
+            // Keyboard - always listen, but only process movement when locked
+            document.addEventListener('keydown', this._onKeyDown.bind(this));
+            document.addEventListener('keyup', this._onKeyUp.bind(this));
+
+            // Mouse buttons for petting
+            document.addEventListener('mousedown', this._onMouseDown.bind(this));
+            document.addEventListener('mouseup', this._onMouseUp.bind(this));
+        }
+    }
+
+    _bindTouchEvents() {
+        // Get UI elements
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickThumb = document.getElementById('joystick-thumb');
+        const btnCall = document.getElementById('btn-call');
+        const btnRun = document.getElementById('btn-run');
+
+        // Joystick touch events
+        if (joystickZone) {
+            joystickZone.addEventListener('touchstart', (e) => this._onJoystickStart(e, joystickBase, joystickThumb), { passive: false });
+            joystickZone.addEventListener('touchmove', (e) => this._onJoystickMove(e, joystickBase, joystickThumb), { passive: false });
+            joystickZone.addEventListener('touchend', (e) => this._onJoystickEnd(e, joystickBase, joystickThumb), { passive: false });
+            joystickZone.addEventListener('touchcancel', (e) => this._onJoystickEnd(e, joystickBase, joystickThumb), { passive: false });
+        }
+
+        // Call button
+        if (btnCall) {
+            btnCall.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btnCall.classList.add('active');
+                this._callSheep();
+            }, { passive: false });
+            btnCall.addEventListener('touchend', () => {
+                btnCall.classList.remove('active');
+            });
+        }
+
+        // Run button (hold to run)
+        if (btnRun) {
+            btnRun.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btnRun.classList.add('active');
+                this.keys.run = true;
+            }, { passive: false });
+            btnRun.addEventListener('touchend', () => {
+                btnRun.classList.remove('active');
                 this.keys.run = false;
+            });
+            btnRun.addEventListener('touchcancel', () => {
+                btnRun.classList.remove('active');
+                this.keys.run = false;
+            });
+        }
+
+        // Camera look: touch anywhere on canvas (except joystick/buttons area)
+        this.canvas.addEventListener('touchstart', this._onCanvasTouchStart.bind(this), { passive: false });
+        this.canvas.addEventListener('touchmove', this._onCanvasTouchMove.bind(this), { passive: false });
+        this.canvas.addEventListener('touchend', this._onCanvasTouchEnd.bind(this), { passive: false });
+        this.canvas.addEventListener('touchcancel', this._onCanvasTouchEnd.bind(this), { passive: false });
+
+        // Hide start prompt on touch devices
+        const startPrompt = document.getElementById('start-prompt');
+        if (startPrompt) {
+            startPrompt.style.display = 'none';
+        }
+    }
+
+    _onJoystickStart(e, base, thumb) {
+        e.preventDefault();
+        if (this.touch.joystickActive) return;
+
+        const touch = e.changedTouches[0];
+        this.touch.joystickActive = true;
+        this.touch.joystickTouchId = touch.identifier;
+
+        const rect = base.getBoundingClientRect();
+        this.touch.joystickStart.x = rect.left + rect.width / 2;
+        this.touch.joystickStart.y = rect.top + rect.height / 2;
+
+        base.classList.add('active');
+        this._updateJoystick(touch.clientX, touch.clientY, base, thumb);
+    }
+
+    _onJoystickMove(e, base, thumb) {
+        e.preventDefault();
+        if (!this.touch.joystickActive) return;
+
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === this.touch.joystickTouchId) {
+                this._updateJoystick(touch.clientX, touch.clientY, base, thumb);
+                break;
             }
-        });
+        }
+    }
 
-        // Mouse look
-        document.addEventListener('mousemove', this._onMouseMove.bind(this));
+    _onJoystickEnd(e, joystickBase, thumb) {
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === this.touch.joystickTouchId) {
+                this.touch.joystickActive = false;
+                this.touch.joystickTouchId = null;
+                this.touch.joystickDelta.x = 0;
+                this.touch.joystickDelta.y = 0;
+                this.touch.moveX = 0;
+                this.touch.moveZ = 0;
 
-        // Keyboard - always listen, but only process movement when locked
-        document.addEventListener('keydown', this._onKeyDown.bind(this));
-        document.addEventListener('keyup', this._onKeyUp.bind(this));
+                joystickBase.classList.remove('active');
+                thumb.style.transform = 'translate(0, 0)';
+                break;
+            }
+        }
+    }
 
-        // Mouse buttons for petting
-        document.addEventListener('mousedown', this._onMouseDown.bind(this));
-        document.addEventListener('mouseup', this._onMouseUp.bind(this));
+    _updateJoystick(touchX, touchY, base, thumb) {
+        const maxRadius = 35; // Max thumb movement
+
+        let dx = touchX - this.touch.joystickStart.x;
+        let dy = touchY - this.touch.joystickStart.y;
+
+        // Clamp to max radius
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > maxRadius) {
+            dx = (dx / dist) * maxRadius;
+            dy = (dy / dist) * maxRadius;
+        }
+
+        // Update thumb position
+        thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+
+        // Normalize to -1 to 1 range
+        this.touch.joystickDelta.x = dx / maxRadius;
+        this.touch.joystickDelta.y = dy / maxRadius;
+
+        // Convert to movement (forward is -Z in game, Y down on screen is forward)
+        this.touch.moveX = this.touch.joystickDelta.x;
+        this.touch.moveZ = this.touch.joystickDelta.y;
+    }
+
+    _onCanvasTouchStart(e) {
+        // Check if this touch is for looking (not on UI elements)
+        for (const touch of e.changedTouches) {
+            // Skip if this touch started on joystick area (left 40% of screen, bottom 40%)
+            const x = touch.clientX / window.innerWidth;
+            const y = touch.clientY / window.innerHeight;
+
+            // Left side bottom = joystick, right side bottom = buttons
+            const isJoystickArea = x < 0.35 && y > 0.6;
+            const isButtonArea = x > 0.7 && y > 0.6;
+
+            if (!isJoystickArea && !isButtonArea) {
+                // This is a look touch or tap-to-pet
+                if (!this.touch.lookActive) {
+                    this.touch.lookActive = true;
+                    this.touch.lookTouchId = touch.identifier;
+                    this.touch.lookLast.x = touch.clientX;
+                    this.touch.lookLast.y = touch.clientY;
+                    this.touch.lookStartTime = Date.now();
+                    this.touch.lookStartPos = { x: touch.clientX, y: touch.clientY };
+                }
+            }
+        }
+    }
+
+    _onCanvasTouchMove(e) {
+        if (!this.touch.lookActive) return;
+
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === this.touch.lookTouchId) {
+                const dx = touch.clientX - this.touch.lookLast.x;
+                const dy = touch.clientY - this.touch.lookLast.y;
+
+                // Apply camera rotation (reduced sensitivity for touch)
+                const sensitivity = this.cameraConfig.sensitivity * 0.8;
+                this.player.rotation.yaw -= dx * sensitivity;
+                this.player.rotation.pitch -= dy * sensitivity;
+
+                this.player.rotation.pitch = Math.max(
+                    -this.cameraConfig.pitchLimit,
+                    Math.min(this.cameraConfig.pitchLimit, this.player.rotation.pitch)
+                );
+
+                this.touch.lookLast.x = touch.clientX;
+                this.touch.lookLast.y = touch.clientY;
+                break;
+            }
+        }
+    }
+
+    _onCanvasTouchEnd(e) {
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === this.touch.lookTouchId) {
+                // Check if this was a tap (short duration, minimal movement)
+                const duration = Date.now() - (this.touch.lookStartTime || 0);
+                const dx = touch.clientX - (this.touch.lookStartPos?.x || 0);
+                const dy = touch.clientY - (this.touch.lookStartPos?.y || 0);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // If it's a quick tap with minimal movement, try to pet sheep
+                if (duration < 300 && dist < 20) {
+                    this._onTapToPet(touch.clientX, touch.clientY);
+                }
+
+                this.touch.lookActive = false;
+                this.touch.lookTouchId = null;
+                break;
+            }
+        }
+    }
+
+    _onTapToPet(screenX, screenY) {
+        // Convert screen position to normalized device coordinates
+        const x = (screenX / window.innerWidth) * 2 - 1;
+        const y = -(screenY / window.innerHeight) * 2 + 1;
+
+        // Raycast from tap position
+        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+
+        const sheepMeshes = this.cloudfens
+            .filter(c => c.mesh)
+            .map(c => ({ mesh: c.mesh, cloudfen: c }));
+
+        const meshes = sheepMeshes.map(s => s.mesh);
+        const intersects = this.raycaster.intersectObjects(meshes, true);
+
+        if (intersects.length > 0) {
+            const distance = intersects[0].distance;
+
+            // Find which sheep was tapped
+            let tappedSheep = null;
+            for (const sheepData of sheepMeshes) {
+                let obj = intersects[0].object;
+                while (obj) {
+                    if (obj === sheepData.mesh) {
+                        tappedSheep = sheepData.cloudfen;
+                        break;
+                    }
+                    obj = obj.parent;
+                }
+                if (tappedSheep) break;
+            }
+
+            if (tappedSheep && distance <= this.interactionRange * 1.5) {
+                // Pet the sheep!
+                tappedSheep.startPetting();
+
+                // Quick pet animation (auto-end after short delay)
+                setTimeout(() => {
+                    tappedSheep.endPetting(1.0);
+                }, 800);
+
+                // Show feedback
+                this._showMobilePetHint(false);
+            } else if (tappedSheep) {
+                // Too far - show hint
+                this._showMobilePetHint(true, 'Move closer to pet');
+            }
+        }
+    }
+
+    _showMobilePetHint(show, text = 'Tap sheep to pet') {
+        const hint = document.getElementById('mobile-pet-hint');
+        if (hint) {
+            hint.textContent = text;
+            if (show) {
+                hint.classList.add('visible');
+                clearTimeout(this._petHintTimeout);
+                this._petHintTimeout = setTimeout(() => {
+                    hint.classList.remove('visible');
+                }, 2000);
+            } else {
+                hint.classList.remove('visible');
+            }
+        }
     }
 
     _onMouseMove(e) {
@@ -449,13 +752,20 @@ class TouchSheepGame {
         // Get movement input
         const moveDir = new THREE.Vector3();
 
-        if (this.keys.forward) moveDir.z -= 1;
-        if (this.keys.backward) moveDir.z += 1;
-        if (this.keys.left) moveDir.x -= 1;
-        if (this.keys.right) moveDir.x += 1;
+        if (this.isTouchDevice) {
+            // Use joystick input for touch devices
+            moveDir.x = this.touch.moveX;
+            moveDir.z = this.touch.moveZ;
+        } else {
+            // Keyboard input for desktop
+            if (this.keys.forward) moveDir.z -= 1;
+            if (this.keys.backward) moveDir.z += 1;
+            if (this.keys.left) moveDir.x -= 1;
+            if (this.keys.right) moveDir.x += 1;
+        }
 
-        // Normalize diagonal movement
-        if (moveDir.length() > 0) {
+        // Normalize diagonal movement (only for keyboard, joystick is already normalized)
+        if (!this.isTouchDevice && moveDir.length() > 0) {
             moveDir.normalize();
         }
 
@@ -608,6 +918,18 @@ class TouchSheepGame {
         const prompt = document.getElementById('interaction-prompt');
         if (!prompt) return;
 
+        // On touch devices, use mobile pet hint instead
+        if (this.isTouchDevice) {
+            prompt.classList.remove('visible');
+            prompt.classList.remove('can-interact');
+
+            // Show mobile hint when near sheep
+            if (sheep && distance <= this.interactionRange * 1.5) {
+                this._showMobilePetHint(true, distance <= this.interactionRange ? 'Tap sheep to pet!' : 'Move closer to pet');
+            }
+            return;
+        }
+
         if (sheep && this.isLocked) {
             prompt.classList.add('visible');
 
@@ -630,14 +952,22 @@ class TouchSheepGame {
         const crosshair = document.getElementById('crosshair');
         const controlsHint = document.getElementById('controls-hint');
 
-        if (startPrompt) {
-            startPrompt.style.display = this.isLocked ? 'none' : 'flex';
-        }
-        if (crosshair) {
-            crosshair.style.display = this.isLocked ? 'block' : 'none';
-        }
-        if (controlsHint) {
-            controlsHint.style.opacity = this.isLocked ? '0.5' : '0';
+        if (this.isTouchDevice) {
+            // Touch device: always hide desktop UI, show mobile controls
+            if (startPrompt) startPrompt.style.display = 'none';
+            if (crosshair) crosshair.style.display = 'none';
+            if (controlsHint) controlsHint.style.display = 'none';
+        } else {
+            // Desktop
+            if (startPrompt) {
+                startPrompt.style.display = this.isLocked ? 'none' : 'flex';
+            }
+            if (crosshair) {
+                crosshair.style.display = this.isLocked ? 'block' : 'none';
+            }
+            if (controlsHint) {
+                controlsHint.style.opacity = this.isLocked ? '0.5' : '0';
+            }
         }
     }
 

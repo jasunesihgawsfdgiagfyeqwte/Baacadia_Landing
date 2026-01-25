@@ -50,7 +50,7 @@
         <!-- Interaction Prompt -->
         <div id="interaction-prompt"></div>
 
-        <!-- Controls Hint (bottom left) -->
+        <!-- Controls Hint (bottom left) - Desktop only -->
         <div id="controls-hint">
             <div class="hint-row">
                 <span class="hint-key">Space</span>
@@ -60,6 +60,31 @@
                 <span class="hint-key">E</span>
                 <span class="hint-label">Pet (when close)</span>
             </div>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div id="mobile-controls">
+            <!-- Virtual Joystick (left side) -->
+            <div id="joystick-zone">
+                <div id="joystick-base">
+                    <div id="joystick-thumb"></div>
+                </div>
+            </div>
+
+            <!-- Action Buttons (right side) -->
+            <div id="action-buttons">
+                <button type="button" id="btn-call" class="action-btn">
+                    <span class="btn-icon">📢</span>
+                    <span class="btn-label">Call</span>
+                </button>
+                <button type="button" id="btn-run" class="action-btn">
+                    <span class="btn-icon">🏃</span>
+                    <span class="btn-label">Run</span>
+                </button>
+            </div>
+
+            <!-- Pet instruction for mobile -->
+            <div id="mobile-pet-hint">Tap sheep to pet</div>
         </div>
 
         <!-- Wishlist CTA -->

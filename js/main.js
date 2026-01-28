@@ -46,8 +46,11 @@
     let cloudfens = [];
     let loadedModel = null;
     
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-        || window.innerWidth < 768;
+    // Detect true mobile/tablet devices:
+    // - pointer: coarse = primary input is touch (not precise mouse)
+    // - hover: none = no hover capability (no mouse/trackpad)
+    // This excludes touchscreen laptops which have hover via trackpad/mouse
+    const isMobile = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
 
     // ─────────────────────────────────────────────────────────────────
     // RESPONSIVE POSITIONS - 根据屏幕尺寸调整羊的位置
@@ -569,6 +572,29 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // DEMO IFRAME SETUP
+    // ─────────────────────────────────────────────────────────────────
+    function initDemoIframe() {
+        const iframe = document.getElementById('touch-sheep-demo');
+        const demoHint = document.querySelector('.demo-hint');
+
+        if (iframe) {
+            // Pass device mode to iframe via URL parameter
+            const mode = isMobile ? 'mobile' : 'desktop';
+            iframe.src = `touch-sheep/index.html?mode=${mode}`;
+        }
+
+        if (demoHint) {
+            // Update hint text based on device mode
+            if (isMobile) {
+                demoHint.textContent = 'Tap to start · Drag to look · Tap sheep to pet';
+            } else {
+                demoHint.textContent = 'Click to start · WASD to move · Click to pet';
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     // INITIALIZATION
     // ─────────────────────────────────────────────────────────────────
     function init() {
@@ -584,6 +610,7 @@
 
         initScrollReveal();
         initWishlistModal();
+        initDemoIframe();
         console.log('BAACADIA Landing initialized | Mobile:', isMobile);
     }
 

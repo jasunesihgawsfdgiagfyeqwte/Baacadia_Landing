@@ -136,12 +136,12 @@ class TouchSheepGame {
             // Use parent page's detection for consistency
             this.isTouchDevice = (parentMode === 'mobile');
         } else {
-            // Fallback: Detect true mobile/tablet devices by checking for:
-            // 1. Coarse primary pointer (finger touch, not precise mouse)
-            // 2. No hover capability (no mouse/trackpad for hovering)
-            // This combination excludes touchscreen laptops which have hover via trackpad/mouse
+            // Fallback: Detect mobile mode based on:
+            // 1. Device capability: pointer: coarse + hover: none (true mobile devices)
+            // 2. OR screen/iframe width <= 768px (small viewports should use mobile UI)
             this.isTouchDevice = (
                 window.matchMedia('(pointer: coarse) and (hover: none)').matches
+                || window.innerWidth <= 768
             );
         }
 

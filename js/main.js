@@ -46,11 +46,12 @@
     let cloudfens = [];
     let loadedModel = null;
     
-    // Detect true mobile/tablet devices:
-    // - pointer: coarse = primary input is touch (not precise mouse)
-    // - hover: none = no hover capability (no mouse/trackpad)
-    // This excludes touchscreen laptops which have hover via trackpad/mouse
-    const isMobile = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
+    // Detect mobile mode based on:
+    // 1. Device capability: pointer: coarse + hover: none (true mobile devices)
+    // 2. OR screen width <= 768px (small viewports should use mobile UI)
+    // This ensures mobile UI on actual phones/tablets AND on small browser windows
+    const isMobile = window.matchMedia('(pointer: coarse) and (hover: none)').matches
+        || window.innerWidth <= 768;
 
     // ─────────────────────────────────────────────────────────────────
     // RESPONSIVE POSITIONS - 根据屏幕尺寸调整羊的位置

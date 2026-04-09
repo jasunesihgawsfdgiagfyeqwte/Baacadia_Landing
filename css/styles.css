@@ -138,19 +138,18 @@ body {
     z-index: 10;
     pointer-events: none;
     
-    /* Gradient overlay that darkens as you scroll down */
+    /* Gradient overlay that darkens as you scroll down — gentle, spread across full page */
     background: linear-gradient(180deg,
         transparent 0%,
-        transparent 60vh,
-        rgba(232, 200, 168, 0.05) 80vh,
-        rgba(232, 200, 168, 0.15) 110vh,
-        rgba(210, 180, 160, 0.3) 140vh,
-        rgba(180, 155, 140, 0.5) 180vh,
-        rgba(120, 100, 90, 0.7) 220vh,
-        rgba(70, 60, 54, 0.85) 260vh,
-        rgba(42, 36, 32, 0.95) 300vh,
-        var(--ink) 340vh,
-        var(--ink) 100%
+        transparent 10%,
+        rgba(232, 200, 168, 0.05) 20%,
+        rgba(232, 200, 168, 0.1) 35%,
+        rgba(210, 180, 160, 0.18) 50%,
+        rgba(180, 155, 140, 0.28) 65%,
+        rgba(150, 130, 118, 0.38) 78%,
+        rgba(120, 100, 90, 0.5) 90%,
+        rgba(90, 78, 70, 0.6) 96%,
+        rgba(70, 60, 54, 0.7) 100%
     );
 }
 

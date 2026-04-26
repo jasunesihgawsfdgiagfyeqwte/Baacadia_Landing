@@ -1,6 +1,6 @@
 /**
  * MossBall - Physics-enabled ball that blocks the exit
- * Can be pushed by charging Cloudfens
+ * Can be pushed by charging clofens
  */
 export class MossBall {
     constructor(game) {

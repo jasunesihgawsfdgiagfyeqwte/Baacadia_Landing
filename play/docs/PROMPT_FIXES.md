@@ -16,11 +16,11 @@
 **Location:** [Player.js:310-325](../js/entities/Player.js#L310-L325)
 
 **Root Cause:**
-When near a Cloudfen, BOTH `nearbyCloudfen` and `nearbySoundSource` are set (because the Cloudfen IS the sound source for Gather). But the logic was:
+When near a clofen, BOTH `nearbyclofen` and `nearbySoundSource` are set (because the clofen IS the sound source for Gather). But the logic was:
 
 ```javascript
 // BEFORE (WRONG)
-if (this.nearbyCloudfen !== null) {
+if (this.nearbyclofen !== null) {
     this.game.ui.showInteractionPrompt('pet');
 }
 else if (this.nearbySoundSource !== null) {  // ← Never executes!
@@ -38,14 +38,14 @@ The `else if` meant "Record Gather" NEVER showed because the pet prompt always t
 if (this.nearbySoundSource !== null) {
     this.game.ui.showInteractionPrompt(`record-${this.nearbySoundSource.type}`);
 }
-else if (this.nearbyCloudfen !== null) {
+else if (this.nearbyclofen !== null) {
     this.game.ui.showInteractionPrompt('pet');
 }
 ```
 
 **Result:**
-- Near Cloudfen WITHOUT Gather recorded → Shows "Q: Record Gather" ✅
-- Near Cloudfen WITH Gather recorded → Shows "E: Pet" ✅
+- Near clofen WITHOUT Gather recorded → Shows "Q: Record Gather" ✅
+- Near clofen WITH Gather recorded → Shows "E: Pet" ✅
 - Near Bird → Shows "Q: Record Charge" ✅
 
 ---
@@ -124,11 +124,11 @@ When elements have the same z-index, they stack in DOM order. Since sound slots 
 
 **Expected Behavior:**
 
-1. **Near Cloudfen (no Gather yet):**
+1. **Near clofen (no Gather yet):**
    - Shows: "Q: Record Gather" ✅
    - Floating above sound slots ✅
 
-2. **Near Cloudfen (has Gather):**
+2. **Near clofen (has Gather):**
    - Shows: "E: Pet" ✅
    - Floating above sound slots ✅
 

@@ -222,7 +222,7 @@ export class Effects {
     }
 
     /**
-     * Spawn hearts when petting Cloudfen
+     * Spawn hearts when petting clofen
      */
     spawnHearts(position) {
         // Spawn 2-3 hearts for a flourish effect

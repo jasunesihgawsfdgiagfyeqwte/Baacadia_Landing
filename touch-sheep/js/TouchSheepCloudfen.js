@@ -1,9 +1,9 @@
 /**
- * Cloudfen - Sheep AI for first-person herding demo
+ * clofen - Sheep AI for first-person herding demo
  * Rich behavior system with grazing, sleeping, social interactions
  * Reacts to player position and movement
  */
-export class Cloudfen {
+export class clofen {
     static STATE = {
         IDLE: 'idle',
         GRAZING: 'grazing',
@@ -29,7 +29,7 @@ export class Cloudfen {
         this.baseScale = 1.0;
 
         // State machine
-        this.state = Cloudfen.STATE.IDLE;
+        this.state = clofen.STATE.IDLE;
         this.stateTimer = 0;
         this.previousState = null;
 
@@ -337,7 +337,7 @@ export class Cloudfen {
     // ==================== INTERACTION HANDLERS ====================
 
     onHoverStart() {
-        if (this.state === Cloudfen.STATE.BLISS || this.state === Cloudfen.STATE.FLEEING) return;
+        if (this.state === clofen.STATE.BLISS || this.state === clofen.STATE.FLEEING) return;
         this.isHovered = true;
         this.hoverTime = 0;
     }
@@ -374,26 +374,26 @@ export class Cloudfen {
         this.isPetted = false;
         this.petDuration = duration;
 
-        if (this.state === Cloudfen.STATE.BLISS) {
+        if (this.state === clofen.STATE.BLISS) {
             this.stateTimer = 0;
-        } else if (this.state === Cloudfen.STATE.PETTED) {
+        } else if (this.state === clofen.STATE.PETTED) {
             const heartCount = Math.min(Math.floor(duration * 2), 5);
             if (this.game.effects && heartCount > 0) {
                 this.game.effects.spawnHearts(this.mesh.position, heartCount);
             }
 
             setTimeout(() => {
-                if (this.state === Cloudfen.STATE.PETTED) {
-                    this.setState(Cloudfen.STATE.IDLE);
+                if (this.state === clofen.STATE.PETTED) {
+                    this.setState(clofen.STATE.IDLE);
                 }
             }, 1000);
         }
     }
 
     onCalled(sourcePosition) {
-        if (this.state === Cloudfen.STATE.BLISS || this.state === Cloudfen.STATE.FLEEING) return;
+        if (this.state === clofen.STATE.BLISS || this.state === clofen.STATE.FLEEING) return;
 
-        if (this.state === Cloudfen.STATE.SLEEPING || this.state === Cloudfen.STATE.RESTING) {
+        if (this.state === clofen.STATE.SLEEPING || this.state === clofen.STATE.RESTING) {
             this._standUp();
         }
 
@@ -403,13 +403,13 @@ export class Cloudfen {
 
         setTimeout(() => {
             if (Math.random() > this.personality.shyness * 0.5) {
-                this.setState(Cloudfen.STATE.CALLED);
+                this.setState(clofen.STATE.CALLED);
                 this.targetPosition = sourcePosition.clone();
                 this.targetPosition.y = 0;
                 const approachDir = dir.clone().normalize();
                 this.targetPosition.sub(approachDir.multiplyScalar(this.comfortDistance));
             } else {
-                this.setState(Cloudfen.STATE.CURIOUS);
+                this.setState(clofen.STATE.CURIOUS);
             }
         }, delay);
     }
@@ -440,45 +440,45 @@ export class Cloudfen {
         this._updateMood(dt, playerPosition);
         this._updateAttention(dt, playerPosition);
 
-        if (this.state !== Cloudfen.STATE.RESTING && this.state !== Cloudfen.STATE.SLEEPING) {
+        if (this.state !== clofen.STATE.RESTING && this.state !== clofen.STATE.SLEEPING) {
             this.tiredness = Math.min(1, this.tiredness + dt * 0.005 * this.personality.laziness);
         }
 
         switch (this.state) {
-            case Cloudfen.STATE.IDLE:
+            case clofen.STATE.IDLE:
                 this._updateIdle(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.GRAZING:
+            case clofen.STATE.GRAZING:
                 this._updateGrazing(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.LOOKING:
+            case clofen.STATE.LOOKING:
                 this._updateLooking(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.STRETCHING:
+            case clofen.STATE.STRETCHING:
                 this._updateStretching(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.RESTING:
+            case clofen.STATE.RESTING:
                 this._updateResting(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.SLEEPING:
+            case clofen.STATE.SLEEPING:
                 this._updateSleeping(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.SOCIAL:
+            case clofen.STATE.SOCIAL:
                 this._updateSocial(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.CURIOUS:
+            case clofen.STATE.CURIOUS:
                 this._updateCurious(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.PETTED:
+            case clofen.STATE.PETTED:
                 this._updatePetted(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.BLISS:
+            case clofen.STATE.BLISS:
                 this._updateBliss(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.CALLED:
+            case clofen.STATE.CALLED:
                 this._updateCalled(dt, playerPosition);
                 break;
-            case Cloudfen.STATE.FLEEING:
+            case clofen.STATE.FLEEING:
                 this._updateFleeing(dt, playerPosition);
                 break;
         }
@@ -499,17 +499,17 @@ export class Cloudfen {
         const playerSpeed = playerVelocity ? Math.sqrt(playerVelocity.x ** 2 + playerVelocity.z ** 2) : 0;
         const isPlayerRunning = playerSpeed > 3;
 
-        const canFlee = this.state !== Cloudfen.STATE.PETTED &&
-                        this.state !== Cloudfen.STATE.BLISS &&
-                        this.state !== Cloudfen.STATE.SLEEPING;
+        const canFlee = this.state !== clofen.STATE.PETTED &&
+                        this.state !== clofen.STATE.BLISS &&
+                        this.state !== clofen.STATE.SLEEPING;
 
         if (distance < this.fleeThreshold && isPlayerRunning && canFlee) {
-            if (this.state === Cloudfen.STATE.RESTING) {
+            if (this.state === clofen.STATE.RESTING) {
                 this._standUp();
             }
 
             if (Math.random() < this.personality.flightiness) {
-                this.setState(Cloudfen.STATE.FLEEING);
+                this.setState(clofen.STATE.FLEEING);
                 this.targetPosition = this.position.clone();
                 const fleeDir = toPlayer.normalize().multiplyScalar(-1);
                 this.targetPosition.add(fleeDir.multiplyScalar(8 + Math.random() * 5));
@@ -528,7 +528,7 @@ export class Cloudfen {
         this.targetEyeOpenness = 1.0;
 
         if (this.isHovered && this.hoverTime > 1.5 && this.playerAwareness > 0.3) {
-            this.setState(Cloudfen.STATE.CURIOUS);
+            this.setState(clofen.STATE.CURIOUS);
             return;
         }
 
@@ -536,7 +536,7 @@ export class Cloudfen {
             const dist = this.position.distanceTo(playerPosition);
             if (this.timesBeenPetted > 0 && dist < 6 && Math.random() < 0.01) {
                 this._pickLookTarget(playerPosition);
-                this.setState(Cloudfen.STATE.LOOKING);
+                this.setState(clofen.STATE.LOOKING);
                 return;
             }
         }
@@ -565,7 +565,7 @@ export class Cloudfen {
 
                 if (Math.random() < 0.3) {
                     this._pickLookTarget(playerPosition);
-                    this.setState(Cloudfen.STATE.LOOKING);
+                    this.setState(clofen.STATE.LOOKING);
                     return;
                 }
             }
@@ -587,7 +587,7 @@ export class Cloudfen {
             if (this.favoriteSpot && this.position.distanceTo(this.favoriteSpot) > 3) {
                 this.targetPosition = this.favoriteSpot.clone();
             }
-            this.setState(Cloudfen.STATE.RESTING);
+            this.setState(clofen.STATE.RESTING);
             return;
         }
 
@@ -614,7 +614,7 @@ export class Cloudfen {
             cumulative += this.behaviorWeights.social * moodModifiers.social;
             if (roll < cumulative) {
                 this.socialTarget = nearestSheep.sheep;
-                this.setState(Cloudfen.STATE.SOCIAL);
+                this.setState(clofen.STATE.SOCIAL);
                 return;
             }
         }
@@ -624,7 +624,7 @@ export class Cloudfen {
         cumulative += grazeWeight;
         if (roll < cumulative) {
             this.grazeDuration = 3 + Math.random() * 5;
-            this.setState(Cloudfen.STATE.GRAZING);
+            this.setState(clofen.STATE.GRAZING);
             return;
         }
 
@@ -633,20 +633,20 @@ export class Cloudfen {
         cumulative += lookWeight;
         if (roll < cumulative) {
             this._pickLookTarget(playerPosition);
-            this.setState(Cloudfen.STATE.LOOKING);
+            this.setState(clofen.STATE.LOOKING);
             return;
         }
 
         let stretchWeight = this.behaviorWeights.stretch;
-        if (this.previousState === Cloudfen.STATE.RESTING ||
-            this.previousState === Cloudfen.STATE.SLEEPING) {
+        if (this.previousState === clofen.STATE.RESTING ||
+            this.previousState === clofen.STATE.SLEEPING) {
             stretchWeight *= 3;
         }
         cumulative += stretchWeight;
         if (roll < cumulative) {
             this.stretchType = Math.floor(Math.random() * 3);
             this.stretchProgress = 0;
-            this.setState(Cloudfen.STATE.STRETCHING);
+            this.setState(clofen.STATE.STRETCHING);
             return;
         }
 
@@ -655,7 +655,7 @@ export class Cloudfen {
             if (this.favoriteSpot && this.position.distanceTo(this.favoriteSpot) > 3) {
                 this.targetPosition = this.favoriteSpot.clone();
             }
-            this.setState(Cloudfen.STATE.RESTING);
+            this.setState(clofen.STATE.RESTING);
             return;
         }
 
@@ -708,12 +708,12 @@ export class Cloudfen {
         let nearest = null;
         let nearestDist = Infinity;
 
-        for (const other of this.game.cloudfens) {
+        for (const other of this.game.clofens) {
             if (other === this) continue;
-            if (other.state === Cloudfen.STATE.SLEEPING ||
-                other.state === Cloudfen.STATE.FLEEING ||
-                other.state === Cloudfen.STATE.PETTED ||
-                other.state === Cloudfen.STATE.BLISS) continue;
+            if (other.state === clofen.STATE.SLEEPING ||
+                other.state === clofen.STATE.FLEEING ||
+                other.state === clofen.STATE.PETTED ||
+                other.state === clofen.STATE.BLISS) continue;
 
             const dx = other.position.x - this.position.x;
             const dz = other.position.z - this.position.z;
@@ -764,7 +764,7 @@ export class Cloudfen {
         if (playerPosition) {
             const dist = this.position.distanceTo(playerPosition);
             if (dist < 3) {
-                this.setState(Cloudfen.STATE.CURIOUS);
+                this.setState(clofen.STATE.CURIOUS);
                 return;
             }
         }
@@ -772,7 +772,7 @@ export class Cloudfen {
         if (this.grazingTimer >= this.grazeDuration) {
             this.grazingTimer = 0;
             this.grazeHeadBob = 0;
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (Math.random() < 0.004) {
@@ -786,11 +786,11 @@ export class Cloudfen {
 
         if (this.lookTimer <= 0) {
             this.lookTarget = null;
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (this.isHovered && this.hoverTime > 1) {
-            this.setState(Cloudfen.STATE.CURIOUS);
+            this.setState(clofen.STATE.CURIOUS);
         }
     }
 
@@ -802,12 +802,12 @@ export class Cloudfen {
 
         if (this.stretchProgress >= stretchDuration) {
             this.stretchProgress = 0;
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (this.isHovered && this.hoverTime > 0.5) {
             this.stretchProgress = 0;
-            this.setState(Cloudfen.STATE.CURIOUS);
+            this.setState(clofen.STATE.CURIOUS);
         }
     }
 
@@ -825,7 +825,7 @@ export class Cloudfen {
         this.tiredness = Math.max(0, this.tiredness - dt * 0.03);
 
         if (this.tiredness < 0.2 && this.stateTimer > 5 && Math.random() < 0.01) {
-            this.setState(Cloudfen.STATE.SLEEPING);
+            this.setState(clofen.STATE.SLEEPING);
             return;
         }
 
@@ -833,14 +833,14 @@ export class Cloudfen {
             const dist = this.position.distanceTo(playerPosition);
             if (dist < 4 && this.playerAwareness > 0.5) {
                 this._standUp();
-                this.setState(Cloudfen.STATE.CURIOUS);
+                this.setState(clofen.STATE.CURIOUS);
                 return;
             }
         }
 
         if (this.stateTimer > 8 + Math.random() * 5 && this.tiredness < 0.4) {
             this._standUp();
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (Math.random() < 0.006) {
@@ -864,7 +864,7 @@ export class Cloudfen {
                 this.targetEyeOpenness = 0.5;
                 if (dist < 2 || this.isHovered) {
                     this._standUp();
-                    this.setState(Cloudfen.STATE.CURIOUS);
+                    this.setState(clofen.STATE.CURIOUS);
                     return;
                 }
             }
@@ -875,7 +875,7 @@ export class Cloudfen {
             this._standUp();
             this.stretchType = 0;
             this.stretchProgress = 0;
-            this.setState(Cloudfen.STATE.STRETCHING);
+            this.setState(clofen.STATE.STRETCHING);
         }
     }
 
@@ -890,7 +890,7 @@ export class Cloudfen {
         this.lastSocialTime = Date.now();
 
         if (!this.socialTarget || !this.socialTarget.mesh) {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
             return;
         }
 
@@ -919,10 +919,10 @@ export class Cloudfen {
                 this._doSniff();
             }
 
-            if (this.socialTarget.state === Cloudfen.STATE.IDLE &&
+            if (this.socialTarget.state === clofen.STATE.IDLE &&
                 Math.random() < 0.02) {
                 this.socialTarget.socialTarget = this;
-                this.socialTarget.setState(Cloudfen.STATE.SOCIAL);
+                this.socialTarget.setState(clofen.STATE.SOCIAL);
             }
         }
 
@@ -934,15 +934,15 @@ export class Cloudfen {
 
             if (Math.random() < 0.4) {
                 this.grazeDuration = 3 + Math.random() * 3;
-                this.setState(Cloudfen.STATE.GRAZING);
+                this.setState(clofen.STATE.GRAZING);
             } else {
-                this.setState(Cloudfen.STATE.IDLE);
+                this.setState(clofen.STATE.IDLE);
             }
         }
 
         if (this.isHovered && this.hoverTime > 1.5) {
             this.socialTarget = null;
-            this.setState(Cloudfen.STATE.CURIOUS);
+            this.setState(clofen.STATE.CURIOUS);
         }
     }
 
@@ -963,7 +963,7 @@ export class Cloudfen {
 
         if (!this.isHovered && this.stateTimer > 4) {
             this.headTilt = 0;
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (playerPosition && this.stateTimer > 2) {
@@ -1008,7 +1008,7 @@ export class Cloudfen {
         this.tailPosition = 0.3 + this.happiness * 0.4;
 
         if (this.happiness > 0.8 && this.isPetted && this.stateTimer > 2) {
-            this.setState(Cloudfen.STATE.BLISS);
+            this.setState(clofen.STATE.BLISS);
 
             if (this.game.effects) {
                 this.game.effects.spawnHearts(this.mesh.position, 5);
@@ -1047,7 +1047,7 @@ export class Cloudfen {
 
         if (!this.isPetted) {
             if (this.stateTimer > 3) {
-                this.setState(Cloudfen.STATE.IDLE);
+                this.setState(clofen.STATE.IDLE);
                 this.happiness = 0.3;
             }
         }
@@ -1066,10 +1066,10 @@ export class Cloudfen {
             } else {
                 this.targetPosition = null;
                 this.homePosition.copy(this.position);
-                this.setState(Cloudfen.STATE.CURIOUS);
+                this.setState(clofen.STATE.CURIOUS);
             }
         } else {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
     }
 
@@ -1086,14 +1086,14 @@ export class Cloudfen {
             } else {
                 this.targetPosition = null;
                 this.homePosition.copy(this.position);
-                this.setState(Cloudfen.STATE.IDLE);
+                this.setState(clofen.STATE.IDLE);
             }
         } else {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
 
         if (this.stateTimer > 3) {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
     }
 
@@ -1110,7 +1110,7 @@ export class Cloudfen {
 
         // Balloon-like collision
         const sheepRadius = 0.8 * this.baseScale;
-        for (const other of this.game.cloudfens) {
+        for (const other of this.game.clofens) {
             if (other === this) continue;
 
             const dx = this.position.x - other.position.x;
@@ -1243,19 +1243,19 @@ export class Cloudfen {
         this.breathPhase += dt * this.breathRate * Math.PI;
         const breathAmount = Math.sin(this.breathPhase);
 
-        if (this.state === Cloudfen.STATE.SLEEPING) {
+        if (this.state === clofen.STATE.SLEEPING) {
             this.targetSquash.x = 1 + breathAmount * 0.04;
             this.targetSquash.y = 1 - breathAmount * 0.02;
             this.targetSquash.z = 1 + breathAmount * 0.04;
-        } else if (this.state === Cloudfen.STATE.RESTING) {
+        } else if (this.state === clofen.STATE.RESTING) {
             this.targetSquash.x = 1 + breathAmount * 0.03;
             this.targetSquash.y = 1 - breathAmount * 0.015;
             this.targetSquash.z = 1 + breathAmount * 0.03;
-        } else if (this.state === Cloudfen.STATE.GRAZING) {
+        } else if (this.state === clofen.STATE.GRAZING) {
             yBob = this.grazeHeadBob * 0.08 * this.baseScale;
             targetRotX = this.grazeHeadBob * 0.12;
             this.targetSquash.y = 1 - Math.abs(this.grazeHeadBob) * 0.03;
-        } else if (this.state === Cloudfen.STATE.STRETCHING) {
+        } else if (this.state === clofen.STATE.STRETCHING) {
             const t = this.stretchProgress / 2.5;
             const stretchAmount = Math.sin(t * Math.PI);
 
@@ -1344,7 +1344,7 @@ export class Cloudfen {
         // Apply X-axis wiggle for petting (smooth interpolation)
         this.petWiggle += (this.petWiggleTarget - this.petWiggle) * dt * 10;
         // Decay wiggle target when not being petted
-        if (this.state !== Cloudfen.STATE.PETTED && this.state !== Cloudfen.STATE.BLISS) {
+        if (this.state !== clofen.STATE.PETTED && this.state !== clofen.STATE.BLISS) {
             this.petWiggleTarget *= 0.95;
         }
 
@@ -1357,7 +1357,7 @@ export class Cloudfen {
         // Rotation Y
         let hasMainRotation = false;
 
-        if (this.state === Cloudfen.STATE.CURIOUS || this.state === Cloudfen.STATE.PETTED || this.state === Cloudfen.STATE.BLISS) {
+        if (this.state === clofen.STATE.CURIOUS || this.state === clofen.STATE.PETTED || this.state === clofen.STATE.BLISS) {
             if (playerPosition) {
                 const lookDir = new THREE.Vector3().subVectors(playerPosition, this.position);
                 lookDir.y = 0;
@@ -1365,13 +1365,13 @@ export class Cloudfen {
                 this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, targetRotation, dt * 3);
                 hasMainRotation = true;
             }
-        } else if (this.state === Cloudfen.STATE.LOOKING && this.lookTarget) {
+        } else if (this.state === clofen.STATE.LOOKING && this.lookTarget) {
             const dir = new THREE.Vector3().subVectors(this.lookTarget, this.position);
             dir.y = 0;
             const targetRotation = Math.atan2(dir.x, dir.z);
             this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, targetRotation, dt * 2);
             hasMainRotation = true;
-        } else if (this.state !== Cloudfen.STATE.SLEEPING && this.state !== Cloudfen.STATE.RESTING && speed > 0.2) {
+        } else if (this.state !== clofen.STATE.SLEEPING && this.state !== clofen.STATE.RESTING && speed > 0.2) {
             const targetRotation = Math.atan2(this.velocity.x, this.velocity.z);
             this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, targetRotation, dt * 5);
             hasMainRotation = true;
@@ -1460,20 +1460,20 @@ export class Cloudfen {
         }
 
         this.headShakeTimer -= dt;
-        if (this.headShakeTimer <= 0 && this.state !== Cloudfen.STATE.SLEEPING) {
+        if (this.headShakeTimer <= 0 && this.state !== clofen.STATE.SLEEPING) {
             this._doHeadShake();
             this.headShakeTimer = 10 + Math.random() * 20;
         }
 
         this.pawGroundTimer -= dt;
         if (this.pawGroundTimer <= 0 &&
-            (this.state === Cloudfen.STATE.IDLE || this.state === Cloudfen.STATE.CURIOUS)) {
+            (this.state === clofen.STATE.IDLE || this.state === clofen.STATE.CURIOUS)) {
             this._doPawGround();
             this.pawGroundTimer = 12 + Math.random() * 25;
         }
 
         this.sniffTimer -= dt;
-        if (this.sniffTimer <= 0 && this.state !== Cloudfen.STATE.SLEEPING) {
+        if (this.sniffTimer <= 0 && this.state !== clofen.STATE.SLEEPING) {
             this._doSniff();
             this.sniffTimer = 5 + Math.random() * 10;
         }
@@ -1552,7 +1552,7 @@ export class Cloudfen {
     }
 
     _doRespondVocalize() {
-        if (this.state !== Cloudfen.STATE.SLEEPING) {
+        if (this.state !== clofen.STATE.SLEEPING) {
             this.isVocalizing = true;
             setTimeout(() => {
                 this.isVocalizing = false;
@@ -1563,13 +1563,13 @@ export class Cloudfen {
     // ==================== MOOD SYSTEM ====================
 
     _updateMood(dt, playerPosition) {
-        if (this.state === Cloudfen.STATE.RESTING || this.state === Cloudfen.STATE.SLEEPING) {
+        if (this.state === clofen.STATE.RESTING || this.state === clofen.STATE.SLEEPING) {
             this.mood.contentment = Math.min(1, this.mood.contentment + dt * 0.02);
         }
         if (this.happiness > 0.5) {
             this.mood.contentment = Math.min(1, this.mood.contentment + dt * 0.05);
         }
-        if (this.state === Cloudfen.STATE.FLEEING) {
+        if (this.state === clofen.STATE.FLEEING) {
             this.mood.contentment = Math.max(0, this.mood.contentment - dt * 0.1);
         }
         this.mood.contentment += (0.5 - this.mood.contentment) * dt * 0.01;
@@ -1611,7 +1611,7 @@ export class Cloudfen {
             }
         }
 
-        if (this.state === Cloudfen.STATE.RESTING || this.state === Cloudfen.STATE.SLEEPING) {
+        if (this.state === clofen.STATE.RESTING || this.state === clofen.STATE.SLEEPING) {
             if (!this.favoriteSpot) {
                 this.favoriteSpot = this.position.clone();
             } else {
@@ -1652,8 +1652,8 @@ export class Cloudfen {
         this.lastStrokeTime = Date.now();
         this.timesBeenPetted++;
 
-        if (this.state !== Cloudfen.STATE.BLISS) {
-            this.setState(Cloudfen.STATE.PETTED);
+        if (this.state !== clofen.STATE.BLISS) {
+            this.setState(clofen.STATE.PETTED);
         }
 
         if (this.game.effects) {

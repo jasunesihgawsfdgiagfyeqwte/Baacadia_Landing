@@ -18,7 +18,7 @@ export class Tutorial {
                 duration: 5000,
             },
             {
-                text: "Approach a <b>Cloudfen</b> and hold <b>Q</b> to record its sound",
+                text: "Approach a <b>clofen</b> and hold <b>Q</b> to record its sound",
                 duration: 8000,
             },
             {
@@ -30,7 +30,7 @@ export class Tutorial {
                 duration: 8000,
             },
             {
-                text: "Use <b>Charge</b> to make Cloudfens push the <b>Moss Ball</b>!",
+                text: "Use <b>Charge</b> to make clofens push the <b>Moss Ball</b>!",
                 duration: 10000,
             },
         ];

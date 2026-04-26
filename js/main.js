@@ -14,7 +14,7 @@
     const CONFIG = {
         maxPixelRatio: 2,
         particleCount: { desktop: 50, mobile: 20 },
-        cloudfenCount: { desktop: 8, mobile: 4 },
+        clofenCount: { desktop: 8, mobile: 4 },
         bobSpeed: { min: 0.8, max: 1.2 },
         rotateSpeed: { min: 0.08, max: 0.12 },
         jumpHeight: { min: 0.15, max: 0.25 },
@@ -33,8 +33,8 @@
         skyPeach: 0xf5d5c8,
         skyLavender: 0xc8b8c0,
         sand: 0xd4a574,
-        cloudfenWhite: 0xf8f8f5,
-        cloudfenFace: 0x2a2525,
+        clofenWhite: 0xf8f8f5,
+        clofenFace: 0x2a2525,
         ink: 0x2a2420
     };
 
@@ -43,7 +43,7 @@
     // ─────────────────────────────────────────────────────────────────
     let scene, camera, renderer;
     let scrollY = 0, targetScrollY = 0;
-    let cloudfens = [];
+    let clofens = [];
     let loadedModel = null;
     
     // Detect mobile mode based on:
@@ -56,7 +56,7 @@
     // ─────────────────────────────────────────────────────────────────
     // RESPONSIVE POSITIONS - 根据屏幕尺寸调整羊的位置
     // ─────────────────────────────────────────────────────────────────
-    function getCloudfenPositions() {
+    function getclofenPositions() {
         // 移动端：更小、更分散的布局
         if (isMobile) {
             return [
@@ -137,7 +137,7 @@
         scene.add(fillLight);
 
         // Load model
-        loadCloudfenModel();
+        loadclofenModel();
 
         window.addEventListener('resize', onResize, { passive: true });
         window.addEventListener('scroll', onScroll, { passive: true });
@@ -149,7 +149,7 @@
     // ─────────────────────────────────────────────────────────────────
     // MODEL LOADING
     // ─────────────────────────────────────────────────────────────────
-    function loadCloudfenModel() {
+    function loadclofenModel() {
         const loader = new THREE.GLTFLoader();
         
         loader.load(
@@ -158,7 +158,7 @@
                 console.log('Model loaded!', gltf);
                 loadedModel = gltf.scene;
                 applyMaterials(loadedModel);
-                createCloudfens();
+                createclofens();
                 createParticles();
                 createMountains();
                 hideLoading();
@@ -166,13 +166,13 @@
             (progress) => {
                 if (progress.total > 0) {
                     const pct = Math.round((progress.loaded / progress.total) * 100);
-                    updateLoadingText('Loading Cloudfens... ' + pct + '%');
+                    updateLoadingText('Loading clofens... ' + pct + '%');
                 }
             },
             (error) => {
                 console.error('Model load error:', error);
-                // Fallback to procedural cloudfens
-                createProceduralCloudfens();
+                // Fallback to procedural clofens
+                createProceduralclofens();
                 createParticles();
                 createMountains();
                 hideLoading();
@@ -216,18 +216,18 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // CLOUDFEN CREATION (GLB Model)
+    // clofen CREATION (GLB Model)
     // ─────────────────────────────────────────────────────────────────
-    function createCloudfens() {
+    function createclofens() {
         if (!loadedModel) {
-            createProceduralCloudfens();
+            createProceduralclofens();
             return;
         }
         
         applyMaterials(loadedModel);
         
-        const count = isMobile ? CONFIG.cloudfenCount.mobile : CONFIG.cloudfenCount.desktop;
-        const positions = getCloudfenPositions();
+        const count = isMobile ? CONFIG.clofenCount.mobile : CONFIG.clofenCount.desktop;
+        const positions = getclofenPositions();
         
         // Shuffle positions
         for (let i = positions.length - 1; i > 0; i--) {
@@ -235,7 +235,7 @@
             [positions[i], positions[j]] = [positions[j], positions[i]];
         }
         
-        const tempCloudfens = [];
+        const tempclofens = [];
         
         for (let i = 0; i < Math.min(count, positions.length); i++) {
             const cf = loadedModel.clone();
@@ -263,38 +263,38 @@
                 spinDirection: Math.random() > 0.5 ? 1 : -1
             };
             
-            tempCloudfens.push(cf);
+            tempclofens.push(cf);
         }
         
         // Sort by Y - render top sheep first (further away)
-        tempCloudfens.sort((a, b) => b.position.y - a.position.y);
+        tempclofens.sort((a, b) => b.position.y - a.position.y);
         
-        tempCloudfens.forEach((cf) => {
-            cloudfens.push(cf);
+        tempclofens.forEach((cf) => {
+            clofens.push(cf);
             scene.add(cf);
         });
         
-        console.log('Created', cloudfens.length, 'cloudfens from model!');
+        console.log('Created', clofens.length, 'clofens from model!');
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // PROCEDURAL CLOUDFEN FALLBACK
+    // PROCEDURAL clofen FALLBACK
     // ─────────────────────────────────────────────────────────────────
-    function createProceduralCloudfens() {
+    function createProceduralclofens() {
         const count = isMobile ? 4 : 6;
         const gradientMap = createGradientTexture();
         const woolMat = new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap });
         const darkMat = new THREE.MeshToonMaterial({ color: 0x1a1a1a, gradientMap });
         const outlineMat = new THREE.MeshBasicMaterial({ color: COLORS.ink, side: THREE.BackSide });
         
-        const positions = getCloudfenPositions();
+        const positions = getclofenPositions();
         
         for (let i = positions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [positions[i], positions[j]] = [positions[j], positions[i]];
         }
         
-        const tempCloudfens = [];
+        const tempclofens = [];
         
         for (let i = 0; i < Math.min(count, positions.length); i++) {
             const pos = positions[i];
@@ -365,16 +365,16 @@
                 spinDirection: Math.random() > 0.5 ? 1 : -1
             };
             
-            tempCloudfens.push(group);
+            tempclofens.push(group);
         }
         
-        tempCloudfens.sort((a, b) => b.position.y - a.position.y);
-        tempCloudfens.forEach((cf) => {
-            cloudfens.push(cf);
+        tempclofens.sort((a, b) => b.position.y - a.position.y);
+        tempclofens.forEach((cf) => {
+            clofens.push(cf);
             scene.add(cf);
         });
         
-        console.log('Created', cloudfens.length, 'procedural cloudfens');
+        console.log('Created', clofens.length, 'procedural clofens');
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -451,7 +451,7 @@
 
         scrollY += (targetScrollY - scrollY) * 0.05;
 
-        cloudfens.forEach(cf => {
+        clofens.forEach(cf => {
             const d = cf.userData;
             if (!d) return;
             

@@ -6,7 +6,7 @@
 import { TouchSheepInput } from './TouchSheepInput.js';
 import { TouchSheepScene } from './TouchSheepScene.js';
 import { TouchSheepEffects } from './TouchSheepEffects.js';
-import { Cloudfen } from './TouchSheepCloudfen.js';
+import { clofen } from './TouchSheepclofen.js';
 import { MossBall } from './TouchSheepMossBall.js';
 import { TouchSheepAudio } from './TouchSheepAudio.js';
 
@@ -17,7 +17,7 @@ class TouchSheepGame {
         this.isRunning = false;
 
         // Game entities
-        this.cloudfens = [];
+        this.clofens = [];
         this.mossBalls = [];
         this.activeSheep = null;
 
@@ -359,9 +359,9 @@ class TouchSheepGame {
             spawnedPositions.push({ x, z });
 
             const scale = 0.85 + Math.random() * 0.15; // 0.85-1.0
-            const cloudfen = new Cloudfen(this);
-            await cloudfen.init(x, z, scale);
-            this.cloudfens.push(cloudfen);
+            const clofen = new clofen(this);
+            await clofen.init(x, z, scale);
+            this.clofens.push(clofen);
         }
     }
 
@@ -692,9 +692,9 @@ class TouchSheepGame {
         // Raycast from tap position
         this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
 
-        const sheepMeshes = this.cloudfens
+        const sheepMeshes = this.clofens
             .filter(c => c.mesh)
-            .map(c => ({ mesh: c.mesh, cloudfen: c }));
+            .map(c => ({ mesh: c.mesh, clofen: c }));
 
         const meshes = sheepMeshes.map(s => s.mesh);
         const intersects = this.raycaster.intersectObjects(meshes, true);
@@ -708,7 +708,7 @@ class TouchSheepGame {
                 let obj = intersects[0].object;
                 while (obj) {
                     if (obj === sheepData.mesh) {
-                        tappedSheep = sheepData.cloudfen;
+                        tappedSheep = sheepData.clofen;
                         break;
                     }
                     obj = obj.parent;
@@ -868,12 +868,12 @@ class TouchSheepGame {
         callOrigin.y = 0.5;
         this.effects.spawnCallWave(callOrigin);
 
-        for (const cloudfen of this.cloudfens) {
-            cloudfen.onCalled(callOrigin);
+        for (const clofen of this.clofens) {
+            clofen.onCalled(callOrigin);
 
             // Random chance for sheep to baa in response (with position for distance-based volume)
             if (Math.random() < 0.3 && this.audio) {
-                const sheepPos = cloudfen.position.clone();
+                const sheepPos = clofen.position.clone();
                 setTimeout(() => {
                     this.audio.playSheepBaa(sheepPos);
                 }, 200 + Math.random() * 800);
@@ -964,7 +964,7 @@ class TouchSheepGame {
     _handleSheepCollision() {
         const playerRadius = 0.4; // Player collision radius
 
-        for (const sheep of this.cloudfens) {
+        for (const sheep of this.clofens) {
             if (!sheep.mesh) continue;
 
             const sheepRadius = 0.9 * sheep.baseScale; // Sheep collision radius
@@ -1118,9 +1118,9 @@ class TouchSheepGame {
         // Raycast from camera center
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
 
-        const sheepMeshes = this.cloudfens
+        const sheepMeshes = this.clofens
             .filter(c => c.mesh)
-            .map(c => ({ mesh: c.mesh, cloudfen: c }));
+            .map(c => ({ mesh: c.mesh, clofen: c }));
 
         const meshes = sheepMeshes.map(s => s.mesh);
         const intersects = this.raycaster.intersectObjects(meshes, true);
@@ -1135,7 +1135,7 @@ class TouchSheepGame {
                 let obj = intersects[0].object;
                 while (obj) {
                     if (obj === sheepData.mesh) {
-                        newHovered = sheepData.cloudfen;
+                        newHovered = sheepData.clofen;
                         break;
                     }
                     obj = obj.parent;
@@ -1257,7 +1257,7 @@ class TouchSheepGame {
     }
 
     _updateSheepSpawning(dt) {
-        if (this.cloudfens.length >= this.maxSheep) return;
+        if (this.clofens.length >= this.maxSheep) return;
         if (this.isSpawningSheep) return; // Prevent multiple spawns at once
 
         this.spawnTimer += dt;
@@ -1303,7 +1303,7 @@ class TouchSheepGame {
 
                 // Check distance from other sheep
                 let tooClose = false;
-                for (const sheep of this.cloudfens) {
+                for (const sheep of this.clofens) {
                     const dist = Math.sqrt(
                         (spawnX - sheep.position.x) ** 2 +
                         (spawnZ - sheep.position.z) ** 2
@@ -1320,9 +1320,9 @@ class TouchSheepGame {
 
             // Spawn the new sheep
             const scale = 0.85 + Math.random() * 0.15;
-            const cloudfen = new Cloudfen(this);
-            await cloudfen.init(spawnX, spawnZ, scale);
-            this.cloudfens.push(cloudfen);
+            const clofen = new clofen(this);
+            await clofen.init(spawnX, spawnZ, scale);
+            this.clofens.push(clofen);
             this.totalSpawned++;
 
             // Spawn effect - small ripple where sheep appears
@@ -1331,7 +1331,7 @@ class TouchSheepGame {
                 this.effects.spawnRipple(spawnPos, 0xFFE4C4); // Warm peach color
             }
 
-            console.log(`New sheep joined! Total: ${this.cloudfens.length}`);
+            console.log(`New sheep joined! Total: ${this.clofens.length}`);
         } finally {
             this.isSpawningSheep = false;
         }
@@ -1364,8 +1364,8 @@ class TouchSheepGame {
                 : (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right),
         };
 
-        for (const cloudfen of this.cloudfens) {
-            cloudfen.update(dt, playerInfo);
+        for (const clofen of this.clofens) {
+            clofen.update(dt, playerInfo);
         }
 
         // Update moss balls

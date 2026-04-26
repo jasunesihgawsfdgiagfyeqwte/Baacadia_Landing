@@ -1,7 +1,7 @@
 /**
  * SoundSystem - Handles Gather and Charge sound mechanics
- * Gather: State Sound (hold to activate) - Cloudfens gather to player
- * Charge: Event Sound (click to activate) - Cloudfens charge forward
+ * Gather: State Sound (hold to activate) - clofens gather to player
+ * Charge: Event Sound (click to activate) - clofens charge forward
  */
 export class SoundSystem {
     constructor(game) {
@@ -70,9 +70,9 @@ export class SoundSystem {
         // Visual feedback
         this._spawnGatherWave();
 
-        // Start all cloudfens gathering
-        for (const cloudfen of this.game.cloudfens) {
-            cloudfen.startGathering();
+        // Start all clofens gathering
+        for (const clofen of this.game.clofens) {
+            clofen.startGathering();
         }
     }
 
@@ -87,9 +87,9 @@ export class SoundSystem {
         this.isPlayingState = false;
         this.stateSoundType = null;
 
-        // Stop all cloudfens from gathering
-        for (const cloudfen of this.game.cloudfens) {
-            cloudfen.stopGathering();
+        // Stop all clofens from gathering
+        for (const clofen of this.game.clofens) {
+            clofen.stopGathering();
         }
     }
 
@@ -103,14 +103,14 @@ export class SoundSystem {
         // Visual feedback - directional wave
         this._spawnChargeWave(direction);
 
-        // Make all nearby cloudfens charge
+        // Make all nearby clofens charge
         const playerPos = player.position;
         const range = 8 * this.volume;
 
-        for (const cloudfen of this.game.cloudfens) {
-            const dist = cloudfen.position.distanceTo(playerPos);
+        for (const clofen of this.game.clofens) {
+            const dist = clofen.position.distanceTo(playerPos);
             if (dist < range) {
-                cloudfen.charge(direction);
+                clofen.charge(direction);
             }
         }
 

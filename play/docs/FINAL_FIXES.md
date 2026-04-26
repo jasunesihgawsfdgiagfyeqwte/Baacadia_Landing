@@ -64,7 +64,7 @@ const soundType = this.state.soundSlots[2]; // Gets slot 2's data
 **Before:**
 ```javascript
 if (this.game.hud) {
-    this.game.hud.showPetPrompt(this.nearbyCloudfen !== null);
+    this.game.hud.showPetPrompt(this.nearbyclofen !== null);
     this.game.hud.showRecordPrompt(this.nearbySoundSource !== null, this.nearbySoundSource?.type);
 }
 ```
@@ -72,8 +72,8 @@ if (this.game.hud) {
 **After:**
 ```javascript
 if (this.game.ui) {
-    // Show pet prompt if near cloudfen
-    if (this.nearbyCloudfen !== null) {
+    // Show pet prompt if near clofen
+    if (this.nearbyclofen !== null) {
         this.game.ui.showInteractionPrompt('pet');
     }
     // Show record prompt if near sound source
@@ -87,7 +87,7 @@ if (this.game.ui) {
 }
 ```
 
-**Result:** Pet prompt now appears when near Cloudfen!
+**Result:** Pet prompt now appears when near clofen!
 
 ---
 
@@ -211,9 +211,9 @@ Open the game and verify:
 - [x] Sound slots have "1" and "2" labels visible
 - [x] Slot names show "-" when empty
 - [x] Volume indicator appears on bottom right
-- [x] When near Cloudfen: "E: Pet" appears
+- [x] When near clofen: "E: Pet" appears
 - [x] When near Bird: "Q: Record Charge" appears
-- [x] Hold Q near Cloudfen → "Recording gather..." shows
+- [x] Hold Q near clofen → "Recording gather..." shows
 - [x] Hold Q near Bird → "Recording charge..." shows
 - [x] After recording gather → Slot 1 shows "Gather" text
 - [x] After recording charge → Slot 2 shows "Charge" text
@@ -239,10 +239,10 @@ Open the game and verify:
    - Click to start game
    - Look at bottom center → See two slots with "1" and "2"
    - Move with WASD
-   - Approach a white sheep (Cloudfen)
+   - Approach a white sheep (clofen)
    - See "E: Pet" prompt appear
    - Press E → Hearts appear
-   - Hold Q near Cloudfen → See "Recording gather..."
+   - Hold Q near clofen → See "Recording gather..."
    - Wait 2 seconds → Slot 1 says "Gather"
    - Find blue bird near exit
    - See "Q: Record Charge" prompt

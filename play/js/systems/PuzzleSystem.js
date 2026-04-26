@@ -125,8 +125,8 @@ export class PuzzleSystem {
         const distToExit = Math.sqrt(dx * dx + dz * dz);
 
         if (distToExit < this.exitRadius) {
-            // Also check if at least 1 cloudfen is nearby
-            const nearbyCount = this._countNearbyCloudfen();
+            // Also check if at least 1 clofen is nearby
+            const nearbyCount = this._countNearbyclofen();
 
             if (nearbyCount >= 1) {
                 this._triggerVictory();
@@ -134,12 +134,12 @@ export class PuzzleSystem {
         }
     }
 
-    _countNearbyCloudfen() {
+    _countNearbyclofen() {
         let count = 0;
-        for (const cloudfen of this.game.cloudfens) {
+        for (const clofen of this.game.clofens) {
             // Use 2D distance
-            const dx = cloudfen.position.x - this.exitPosition.x;
-            const dz = cloudfen.position.z - this.exitPosition.z;
+            const dx = clofen.position.x - this.exitPosition.x;
+            const dz = clofen.position.z - this.exitPosition.z;
             const dist = Math.sqrt(dx * dx + dz * dz);
             if (dist < 10) {
                 count++;

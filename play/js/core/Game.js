@@ -4,7 +4,7 @@
  */
 import { Input } from './Input.js';
 import { Player } from '../entities/Player.js';
-import { Cloudfen } from '../entities/Cloudfen.js';
+import { clofen } from '../entities/clofen.js';
 import { Bird } from '../entities/Bird.js';
 import { MossBall } from '../entities/MossBall.js';
 import { SoundSystem } from '../systems/SoundSystem.js';
@@ -26,7 +26,7 @@ class Game {
 
         // Game entities
         this.player = null;
-        this.cloudfens = [];
+        this.clofens = [];
         this.bird = null;
         this.mossBall = null;
 
@@ -194,8 +194,8 @@ class Game {
         this.player = new Player(this);
         await this.player.init();
 
-        // Cloudfens (5 sheep)
-        const cloudfenPositions = [
+        // clofens (5 sheep)
+        const clofenPositions = [
             { x: 5, z: 0 },
             { x: -3, z: 4 },
             { x: 2, z: -5 },
@@ -203,10 +203,10 @@ class Game {
             { x: 0, z: 6 },
         ];
 
-        for (const pos of cloudfenPositions) {
-            const cloudfen = new Cloudfen(this);
-            await cloudfen.init(pos.x, pos.z);
-            this.cloudfens.push(cloudfen);
+        for (const pos of clofenPositions) {
+            const clofen = new clofen(this);
+            await clofen.init(pos.x, pos.z);
+            this.clofens.push(clofen);
         }
 
         // Bird
@@ -292,9 +292,9 @@ class Game {
             this.player.update(dt);
         }
 
-        // Update cloudfens
-        for (const cloudfen of this.cloudfens) {
-            cloudfen.update(dt);
+        // Update clofens
+        for (const clofen of this.clofens) {
+            clofen.update(dt);
         }
 
         // Update bird

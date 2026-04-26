@@ -1,8 +1,8 @@
 /**
- * Cloudfen - Sheep AI with state machine
+ * clofen - Sheep AI with state machine
  * States: IDLE, GATHERING, CHARGING, PETTED
  */
-export class Cloudfen {
+export class clofen {
     // State constants
     static STATE = {
         IDLE: 'idle',
@@ -20,7 +20,7 @@ export class Cloudfen {
         this.targetPosition = null;
 
         // State machine
-        this.state = Cloudfen.STATE.IDLE;
+        this.state = clofen.STATE.IDLE;
         this.stateTimer = 0;
 
         // Movement settings
@@ -246,16 +246,16 @@ export class Cloudfen {
 
         // State machine
         switch (this.state) {
-            case Cloudfen.STATE.IDLE:
+            case clofen.STATE.IDLE:
                 this._updateIdle(dt);
                 break;
-            case Cloudfen.STATE.GATHERING:
+            case clofen.STATE.GATHERING:
                 this._updateGathering(dt);
                 break;
-            case Cloudfen.STATE.CHARGING:
+            case clofen.STATE.CHARGING:
                 this._updateCharging(dt);
                 break;
-            case Cloudfen.STATE.PETTED:
+            case clofen.STATE.PETTED:
                 this._updatePetted(dt);
                 break;
         }
@@ -338,7 +338,7 @@ export class Cloudfen {
 
         // End charge after duration
         if (this.stateTimer >= 0.8) {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
             this.chargeDirection = null;
         }
     }
@@ -351,7 +351,7 @@ export class Cloudfen {
 
         // End petted state
         if (this.stateTimer >= 1.0) {
-            this.setState(Cloudfen.STATE.IDLE);
+            this.setState(clofen.STATE.IDLE);
         }
     }
 
@@ -379,21 +379,21 @@ export class Cloudfen {
             const dx = this.position.x - mossBall.position.x;
             const dz = this.position.z - mossBall.position.z;
             const dist2D = Math.sqrt(dx * dx + dz * dz);
-            const cloudfenRadius = 0.6;
-            const collisionDist = cloudfenRadius + mossBall.radius;
+            const clofenRadius = 0.6;
+            const collisionDist = clofenRadius + mossBall.radius;
 
             if (dist2D < collisionDist && dist2D > 0) {
-                // Calculate push direction (from cloudfen to moss ball)
+                // Calculate push direction (from clofen to moss ball)
                 const pushDir = new THREE.Vector3(
                     mossBall.position.x - this.position.x,
                     0,
                     mossBall.position.z - this.position.z
                 ).normalize();
 
-                // Push strength depends on cloudfen's speed
+                // Push strength depends on clofen's speed
                 const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.z ** 2);
 
-                if (this.state === Cloudfen.STATE.CHARGING) {
+                if (this.state === clofen.STATE.CHARGING) {
                     // Strong push when charging
                     mossBall.push(pushDir, this.chargeSpeed * 1.2);
 
@@ -406,22 +406,22 @@ export class Cloudfen {
                     mossBall.push(pushDir, speed * 0.8);
                 }
 
-                // Push cloudfen back (separation)
+                // Push clofen back (separation)
                 const overlap = collisionDist - dist2D;
                 this.position.x -= pushDir.x * overlap * 0.5;
                 this.position.z -= pushDir.z * overlap * 0.5;
             }
         }
 
-        // Collision with other cloudfens - soft balloon-like bouncing
-        const cloudfenRadius = 0.6;
-        for (const other of this.game.cloudfens) {
+        // Collision with other clofens - soft balloon-like bouncing
+        const clofenRadius = 0.6;
+        for (const other of this.game.clofens) {
             if (other === this) continue;
 
             const dx = this.position.x - other.position.x;
             const dz = this.position.z - other.position.z;
             const dist = Math.sqrt(dx * dx + dz * dz);
-            const minDist = cloudfenRadius * 2; // Both sheep radii
+            const minDist = clofenRadius * 2; // Both sheep radii
 
             if (dist < minDist && dist > 0) {
                 // Soft push apart (like balloons)
@@ -429,7 +429,7 @@ export class Cloudfen {
                 const nx = dx / dist;
                 const nz = dz / dist;
 
-                // Push this cloudfen away (soft, bouncy)
+                // Push this clofen away (soft, bouncy)
                 const pushStrength = overlap * 0.4;
                 this.position.x += nx * pushStrength;
                 this.position.z += nz * pushStrength;
@@ -514,8 +514,8 @@ export class Cloudfen {
      * Start gathering towards player
      */
     startGathering() {
-        if (this.state !== Cloudfen.STATE.PETTED) {
-            this.setState(Cloudfen.STATE.GATHERING);
+        if (this.state !== clofen.STATE.PETTED) {
+            this.setState(clofen.STATE.GATHERING);
         }
     }
 
@@ -523,8 +523,8 @@ export class Cloudfen {
      * Stop gathering
      */
     stopGathering() {
-        if (this.state === Cloudfen.STATE.GATHERING) {
-            this.setState(Cloudfen.STATE.IDLE);
+        if (this.state === clofen.STATE.GATHERING) {
+            this.setState(clofen.STATE.IDLE);
         }
     }
 
@@ -533,7 +533,7 @@ export class Cloudfen {
      */
     charge(direction) {
         this.chargeDirection = direction.clone().normalize();
-        this.setState(Cloudfen.STATE.CHARGING);
+        this.setState(clofen.STATE.CHARGING);
 
         // Visual feedback
         if (this.game.effects) {
@@ -542,13 +542,13 @@ export class Cloudfen {
     }
 
     /**
-     * Pet the cloudfen
+     * Pet the clofen
      */
     pet() {
         if (this.petCooldown > 0) return;
 
         this.petCooldown = 0.5;
         this.happiness = 1;
-        this.setState(Cloudfen.STATE.PETTED);
+        this.setState(clofen.STATE.PETTED);
     }
 }

@@ -34,7 +34,7 @@ export class Player {
         this.scoutBob = 0;
 
         // Interaction
-        this.nearbyCloudfen = null;
+        this.nearbyclofen = null;
         this.nearbySoundSource = null;
     }
 
@@ -270,15 +270,15 @@ export class Player {
     _checkInteractions() {
         const input = this.game.input;
 
-        // Find nearest Cloudfen for petting
-        this.nearbyCloudfen = null;
+        // Find nearest clofen for petting
+        this.nearbyclofen = null;
         let nearestDist = 3; // Interaction range
 
-        for (const cloudfen of this.game.cloudfens) {
-            const dist = this.position.distanceTo(cloudfen.position);
+        for (const clofen of this.game.clofens) {
+            const dist = this.position.distanceTo(clofen.position);
             if (dist < nearestDist) {
                 nearestDist = dist;
-                this.nearbyCloudfen = cloudfen;
+                this.nearbyclofen = clofen;
             }
         }
 
@@ -295,13 +295,13 @@ export class Player {
             }
         }
 
-        // Check for Cloudfen sound source (Gather)
-        if (this.nearbyCloudfen && !this.game.state.hasGather) {
-            const dist = this.position.distanceTo(this.nearbyCloudfen.position);
+        // Check for clofen sound source (Gather)
+        if (this.nearbyclofen && !this.game.state.hasGather) {
+            const dist = this.position.distanceTo(this.nearbyclofen.position);
             if (dist < 4) {
                 this.nearbySoundSource = {
                     type: 'gather',
-                    source: this.nearbyCloudfen,
+                    source: this.nearbyclofen,
                     distance: dist
                 };
             }
@@ -314,8 +314,8 @@ export class Player {
             if (this.nearbySoundSource !== null) {
                 this.game.ui.showInteractionPrompt(`record-${this.nearbySoundSource.type}`);
             }
-            // Show pet prompt if near cloudfen (lower priority)
-            else if (this.nearbyCloudfen !== null) {
+            // Show pet prompt if near clofen (lower priority)
+            else if (this.nearbyclofen !== null) {
                 this.game.ui.showInteractionPrompt('pet');
             }
             // Hide prompt if nothing nearby
@@ -325,10 +325,10 @@ export class Player {
         }
 
         // Handle pet interaction
-        if (input.keys.pet && this.nearbyCloudfen) {
-            this.nearbyCloudfen.pet();
+        if (input.keys.pet && this.nearbyclofen) {
+            this.nearbyclofen.pet();
             if (this.game.effects) {
-                this.game.effects.spawnHearts(this.nearbyCloudfen.position);
+                this.game.effects.spawnHearts(this.nearbyclofen.position);
             }
         }
     }

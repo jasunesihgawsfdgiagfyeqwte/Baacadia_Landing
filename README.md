@@ -11,13 +11,13 @@ baacadia-landing/
 │   └── styles.css      # All styles (CSS variables, animations, responsive)
 ├── js/
 │   └── main.js         # WebGL scene (Three.js) + interactions
-├── sheep.glb           # 3D Cloudfen model (optional - falls back to procedural)
+├── sheep.glb           # 3D clofen model (optional - falls back to procedural)
 └── README.md
 ```
 
 ## Features
 
-- **WebGL Background**: Interactive 3D scene with animated Cloudfens using Three.js
+- **WebGL Background**: Interactive 3D scene with animated clofens using Three.js
 - **Moebius Art Style**: Toon shading, ligne claire aesthetic
 - **Scroll Animations**: Parallax camera movement, reveal animations
 - **Mobile Optimized**: Reduced particle count, simplified rendering on mobile
@@ -48,7 +48,7 @@ Just drag & drop the folder or connect your Git repository.
 
 ## 3D Model
 
-The page expects a `sheep.glb` file in the root directory. If not found, it automatically falls back to procedural Cloudfen generation.
+The page expects a `sheep.glb` file in the root directory. If not found, it automatically falls back to procedural clofen generation.
 
 To add the custom model:
 1. Place `sheep.glb` in the root directory
@@ -76,7 +76,7 @@ To add the custom model:
 ## Credits
 
 - **Project**: USC Games · Advanced Games Project 2025-2026
-- **Cloudfen Model**: Hannah
+- **clofen Model**: Hannah
 - **Design Document**: Baacadia Team
 
 ## License

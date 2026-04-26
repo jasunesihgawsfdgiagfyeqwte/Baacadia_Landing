@@ -43,7 +43,7 @@ window.game.ui.state
 
 Once cache is cleared, test:
 
-1. ✅ **Approach a sheep (Cloudfen)**
+1. ✅ **Approach a sheep (clofen)**
    - Expected: "Q: Record Gather" appears ABOVE sound slots
    - Not: "E: Pet" (recording has priority)
 

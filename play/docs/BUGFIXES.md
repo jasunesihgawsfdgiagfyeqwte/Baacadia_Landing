@@ -11,7 +11,7 @@
 ```javascript
 // Update UI prompts
 if (this.game.hud) {
-    this.game.hud.showPetPrompt(this.nearbyCloudfen !== null);
+    this.game.hud.showPetPrompt(this.nearbyclofen !== null);
     this.game.hud.showRecordPrompt(this.nearbySoundSource !== null, this.nearbySoundSource?.type);
 }
 ```
@@ -20,8 +20,8 @@ if (this.game.hud) {
 ```javascript
 // Update UI prompts via UIManager
 if (this.game.ui) {
-    // Show pet prompt if near cloudfen
-    if (this.nearbyCloudfen !== null) {
+    // Show pet prompt if near clofen
+    if (this.nearbyclofen !== null) {
         this.game.ui.showInteractionPrompt('pet');
     }
     // Show record prompt if near sound source
@@ -36,8 +36,8 @@ if (this.game.ui) {
 ```
 
 **Fix:** Now properly shows:
-- "E: Pet" when near a Cloudfen
-- "Q: Record Gather" when near a Cloudfen (if not yet recorded)
+- "E: Pet" when near a clofen
+- "Q: Record Gather" when near a clofen (if not yet recorded)
 - "Q: Record Charge" when near the Bird
 
 ---
@@ -104,9 +104,9 @@ No remaining `game.hud.` references found in codebase.
 
 ## Testing Checklist
 
-- [x] Pet prompt ("E: Pet") appears when near Cloudfen
+- [x] Pet prompt ("E: Pet") appears when near clofen
 - [x] Record prompts appear when near sound sources
-  - [x] "Q: Record Gather" near Cloudfen
+  - [x] "Q: Record Gather" near clofen
   - [x] "Q: Record Charge" near Bird
 - [x] Sound slot text updates when sounds are recorded
 - [x] Sound slot icons update correctly

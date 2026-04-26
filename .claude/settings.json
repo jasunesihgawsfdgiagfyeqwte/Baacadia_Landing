@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(curl -sL https://baacadia.fun/)",
+      "Bash(curl -sI https://baacadia.fun/og-cover.jpg)",
+      "Bash(curl -sI https://baacadia.fun/sitemap.xml)",
+      "Bash(curl -sI https://baacadia.fun/robots.txt)",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $src = \"$PWD\\\\BaacadiaCliff_KeyArt_AriHoffman \\(1\\).png\"; $img = [System.Drawing.Image]::FromFile\\($src\\); \"Source: $\\($img.Width\\)x$\\($img.Height\\)\"; $img.Dispose\\(\\))",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

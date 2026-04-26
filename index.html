@@ -291,6 +291,19 @@
     .demo-backlink:hover {
         color: var(--flora-dark);
     }
+    /* Stashed state — iframe stays mounted & running off-screen so the
+       game is fully loaded the moment Playground is clicked. */
+    .demo-section.demo-stashed {
+        position: fixed;
+        left: -200vw;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        pointer-events: none;
+        z-index: -1;
+    }
 
     /* ═══════════════════════════════════════════════════════════════
        COMMUNITY SECTION
@@ -726,7 +739,7 @@
         <!-- ═══════════════════════════════════════════════════════════
              DEMO SECTION (demoted)
              ═══════════════════════════════════════════════════════════ -->
-        <section class="section demo-section demoted new-section" id="demo" hidden>
+        <section class="section demo-section demoted new-section demo-stashed" id="demo">
             <div class="demo-container">
                 <h3 class="demo-title reveal">TRY IT YOURSELF</h3>
                 <div class="demo-frame reveal ligne-claire-border">
@@ -849,13 +862,13 @@
 
         srElements.forEach(function (el) { observer.observe(el); });
 
-        /* ─── Reveal hidden demo section when Playground link is clicked ─── */
+        /* ─── Reveal stashed demo section when Playground link is clicked ─── */
         var demoSection = document.getElementById('demo');
         if (demoSection) {
             document.querySelectorAll('a[href="#demo"]').forEach(function (link) {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
-                    demoSection.hidden = false;
+                    demoSection.classList.remove('demo-stashed');
                     demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
@@ -863,8 +876,11 @@
             if (demoBack) {
                 demoBack.addEventListener('click', function (e) {
                     e.preventDefault();
-                    demoSection.hidden = true;
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                    /* Re-stash after scroll completes so the iframe stays mounted */
+                    setTimeout(function () {
+                        demoSection.classList.add('demo-stashed');
+                    }, 700);
                 });
             }
         }

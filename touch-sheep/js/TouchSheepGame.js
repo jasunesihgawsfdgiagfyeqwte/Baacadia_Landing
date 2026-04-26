@@ -6,7 +6,7 @@
 import { TouchSheepInput } from './TouchSheepInput.js';
 import { TouchSheepScene } from './TouchSheepScene.js';
 import { TouchSheepEffects } from './TouchSheepEffects.js';
-import { clofen } from './TouchSheepclofen.js';
+import { clofen } from './TouchSheepClofen.js';
 import { MossBall } from './TouchSheepMossBall.js';
 import { TouchSheepAudio } from './TouchSheepAudio.js';
 
@@ -359,9 +359,9 @@ class TouchSheepGame {
             spawnedPositions.push({ x, z });
 
             const scale = 0.85 + Math.random() * 0.15; // 0.85-1.0
-            const clofen = new clofen(this);
-            await clofen.init(x, z, scale);
-            this.clofens.push(clofen);
+            const c = new clofen(this);
+            await c.init(x, z, scale);
+            this.clofens.push(c);
         }
     }
 
@@ -1320,9 +1320,9 @@ class TouchSheepGame {
 
             // Spawn the new sheep
             const scale = 0.85 + Math.random() * 0.15;
-            const clofen = new clofen(this);
-            await clofen.init(spawnX, spawnZ, scale);
-            this.clofens.push(clofen);
+            const c = new clofen(this);
+            await c.init(spawnX, spawnZ, scale);
+            this.clofens.push(c);
             this.totalSpawned++;
 
             // Spawn effect - small ripple where sheep appears

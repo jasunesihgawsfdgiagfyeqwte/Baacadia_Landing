@@ -17,7 +17,8 @@
       "Bash(curl -sIL https://www.baacadia.fun/sitemap.xml)",
       "Bash(curl -sIL http://baacadia.fun/sitemap.xml)",
       "Bash(curl -sI https://baacadia.fun/)",
-      "Bash(curl -sI https://baacadia.fun/play/)"
+      "Bash(curl -sI https://baacadia.fun/play/)",
+      "WebFetch(domain:store.steampowered.com)"
     ]
   }
 }

@@ -531,15 +531,7 @@
         const modal = document.getElementById('wishlist-modal');
         if (!modal) return;
 
-        const wishlistBtns = document.querySelectorAll('.btn-wishlist');
         const closeBtn = modal.querySelector('.modal-close');
-        const gotItBtn = modal.querySelector('.modal-btn');
-
-        function openModal() {
-            modal.classList.add('active');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
 
         function closeModal() {
             modal.classList.remove('active');
@@ -547,17 +539,8 @@
             document.body.style.overflow = '';
         }
 
-        // Open modal on wishlist button click
-        wishlistBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                openModal();
-            });
-        });
-
         // Close modal
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (gotItBtn) gotItBtn.addEventListener('click', closeModal);
 
         // Close on overlay click
         modal.addEventListener('click', (e) => {
